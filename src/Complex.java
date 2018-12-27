@@ -23,6 +23,14 @@ public class Complex {
 		imag = imag *imag;
 	}
 	
+	public double abs() {			//returns the absolute value of this complex number using the pythagorean theorem
+		double x = Math.abs(this.getReal());
+		double y = Math.abs(this.getImag());
+		
+		double result = Math.sqrt(Math.pow(x,2) + Math.pow(y,2));
+		return result;
+	}
+	
 	public double getReal() {
 		return real;
 	}

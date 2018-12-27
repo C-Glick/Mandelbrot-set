@@ -2,11 +2,11 @@
 public class Launcher {
 
 	public static void main(String[] args) {
-		Complex a = new Complex(5,1);
-		a.sqr();
-		Complex b = new Complex(-32,-5);
-		a.add(b);
-		System.out.println(a.getReal()+""+a.getImag());
+		Complex a = new Complex(0,0.27);
+		Tester tester = new Tester();
+		System.out.println(a.abs());
+		
+		System.out.println(tester.test1(a));
 	}
 
 }
