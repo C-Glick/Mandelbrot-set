@@ -7,14 +7,14 @@ import java.awt.image.BufferStrategy;
 
 public class Launcher {
 	static String title = "kill me";
-	static int width = 500;
-	static int height = 500;
+	static int width = 100;
+	static int height = 100;
 
 	public static void main(String[] args) {
 		Launcher launcher = new Launcher();
 		Tester tester = new Tester();
-		tester.test2(new Complex(-2,2), new Complex(2,-2), width, height);
-		
+		double[][] result = tester.test2(new Complex(-2,2), new Complex(2,-2), width, height);
+		System.out.println(result);
 	//	Display display = new Display(title,width,height,launcher);
 	//	display.start();
 		

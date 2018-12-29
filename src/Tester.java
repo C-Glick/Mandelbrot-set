@@ -4,18 +4,18 @@ public class Tester {
 	int limit=50;		//number of iterations to run before stopping
 	
 	
-	public boolean test1(Complex c) {		//test for just one complex number, returns true if it is in the Mandelbrot set.
+	public double test1(Complex c) {		//test for just one complex number, returns the number of iterations it took to reach the threshold. will be 0 if it surpass the limit
 											//it is in the set if the number stays below the threshold until the iteration limit is reached
 		Complex z = new Complex(0,0);
-		boolean result=true;
+		double result=0;
 		
-		for (int i=0; i<=limit;	i++) {
+		for (int i=1; i<=limit;	i++) {
 			z.sqr();
 			z.add(c);
 			double value = z.abs();
-			System.out.println(value);
+			//System.out.println(value);
 			if (value>=threshold) {
-				result = false;
+				result = i;
 				break;
 			}
 		}
@@ -27,9 +27,16 @@ public class Tester {
 		double stepX = (double) (bottomRight.getReal()-topLeft.getReal())/width;
 		double stepY = (double) (topLeft.getImag() - bottomRight.getImag())/height;
 		
+		
+		//finds the complex numbers based on the pixel numbers
+		//then tests those numbers 
 		for(int x=0; x<width; x++) {
+			double real= ((bottomRight.getReal()-topLeft.getReal())/width)*x+topLeft.getReal();
+			
 			for(int y=0;y<height;y++) {
-				
+				double imag= -(((bottomRight.getReal()-topLeft.getReal())/height)*y+topLeft.getReal());
+				//System.out.println(real+" "+imag);
+				result[x][y] = test1(new Complex(real,imag));
 			}
 			
 		}
@@ -37,5 +44,6 @@ public class Tester {
 		
 		return result;
 	}
+	
 
 }
