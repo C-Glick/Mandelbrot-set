@@ -21,5 +21,21 @@ public class Tester {
 		}
 		return result;
 	}
+	
+	public double[][] test2(Complex topLeft, Complex bottomRight,int width,int height){			//takes in a range of complex numbers and returns a 2D array of the number of iterations to reach the threshold
+		double[][] result = new double[width][height];
+		double stepX = (double) (bottomRight.getReal()-topLeft.getReal())/width;
+		double stepY = (double) (topLeft.getImag() - bottomRight.getImag())/height;
+		
+		for(int x=0; x<width; x++) {
+			for(int y=0;y<height;y++) {
+				
+			}
+			
+		}
+		
+		
+		return result;
+	}
 
 }
