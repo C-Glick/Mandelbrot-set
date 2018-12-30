@@ -14,13 +14,32 @@ public class Complex {
 	}
 	
 	public void multiply(Complex num) {		//multiples this object by the value provided
-		real = real * num.getReal();
-		imag = imag * num.getImag();
+		//(2+5i)*(3+8i) need to use the FOIL method
+		
+				double F = this.getReal() * num.getReal();	 //will give some real number
+				double O = this.getReal() * num.getImag();  //will give some number*i
+				double I = this.getImag() * num.getReal(); 	
+				double L = this.getImag() * num.getImag();  //will give some number*i^2, i^2 is the same as -1 so this number should be inverted
+				L = L * -1;
+				
+				//combine and simplify
+				real = F + L;
+				imag = O + I;
 	}
 	
 	public void sqr() {		//squares this object
-		real = real *real;
-		imag = imag *imag;
+		//(2+5i)^2 = (2+5i)*(2+5i) need to use the FOIL method
+		
+		double F = this.getReal() * this.getReal();	 //will give some real number
+		double O = this.getReal() * this.getImag();  //will give some number*i
+		double I = O; 								 //because both of the binomials are the same, the I and O values are the same
+		double L = this.getImag() * this.getImag();  //will give some number*i^2, i^2 is the same as -1 so this number should be inverted
+		L = L * -1;
+		
+		//combine and simplify
+		real = F + L;
+		imag = O + I;
+		
 	}
 	
 	public double abs() {			//returns the absolute value of this complex number using the pythagorean theorem

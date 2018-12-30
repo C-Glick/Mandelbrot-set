@@ -12,6 +12,7 @@ public class Launcher {
 	static double [][] array;
 
 	public static void main(String[] args) {
+	
 		Launcher launcher = new Launcher();
 		Tester tester = new Tester();
 		launcher.setArray(tester.test2(new Complex(-2,2), new Complex(2,-2), width, height));
@@ -35,7 +36,7 @@ public class Launcher {
 	    			   g.setColor(Color.BLACK);
 	    		   }else {
 	    			   
-		    		   g.setColor(Color.getHSBColor(1, 0, (float)(iterations/100)));			//set the color with by creating a HSB color,
+		    		   g.setColor(Color.getHSBColor(1, 0, (float)(iterations/50)));			//set the color with by creating a HSB color,
 	    		   }
 	    		   
 	    		   g.drawRect(x, y, 1, 1);										//set the pixel at x,y to the color
