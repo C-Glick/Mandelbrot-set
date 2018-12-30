@@ -7,15 +7,15 @@ import java.awt.image.BufferStrategy;
 
 public class Launcher {
 	static String title = "kill me";
-	static int width = 1000;
-	static int height = 1000;
+	static int width = 1080;
+	static int height = 1080;
 	static double [][] array;
 
 	public static void main(String[] args) {
 	
 		Launcher launcher = new Launcher();
 		Tester tester = new Tester();
-		launcher.setArray(tester.test2(new Complex(-2,2), new Complex(2,-2), width, height));
+		launcher.setArray(tester.test2(new Complex(-1.5,1), new Complex(1,-1), width, height));
 		System.out.println(array);
 		Display display = new Display(title,width,height,launcher);
 		display.start();
@@ -36,7 +36,7 @@ public class Launcher {
 	    			   g.setColor(Color.BLACK);
 	    		   }else {
 	    			   
-		    		   g.setColor(Color.getHSBColor(1, 0, (float)(iterations/50)));			//set the color with by creating a HSB color,
+		    		   g.setColor(Color.getHSBColor((float)(iterations/100), 1, 1));			//set the color with by creating a HSB color,
 	    		   }
 	    		   
 	    		   g.drawRect(x, y, 1, 1);										//set the pixel at x,y to the color
