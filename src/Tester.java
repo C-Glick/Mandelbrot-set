@@ -24,8 +24,6 @@ public class Tester {
 	
 	public double[][] test2(Complex topLeft, Complex bottomRight,int width,int height){			//takes in a range of complex numbers and returns a 2D array of the number of iterations to reach the threshold
 		double[][] result = new double[width][height];
-		double stepX = (double) (bottomRight.getReal()-topLeft.getReal())/width;
-		double stepY = (double) (topLeft.getImag() - bottomRight.getImag())/height;
 		
 		
 		//finds the complex numbers based on the pixel numbers

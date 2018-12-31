@@ -6,19 +6,19 @@ import java.awt.image.BufferStrategy;
 
 
 public class Launcher {
-	static String title = "kill me";
-	static int width = 1080;
-	static int height = 1080;
+	static String title = "The MandelBrot Set";
+	static int width = 1000;
+	static int height = 1000;
 	static double [][] array;
 	
 	static double threshold = 2;
-	static int limit = 100; 
+	static int limit = 50; 				//think of this as the resolution of the graph, the more the function is allowed to iterate, the more detailed the result
 
 	public static void main(String[] args) {
 	
 		Launcher launcher = new Launcher();
 		Tester tester = new Tester();
-		launcher.setArray(tester.test2(new Complex(-1.5,1), new Complex(1,-1), width, height));
+		launcher.setArray(tester.test2(new Complex(-2,2), new Complex(2,-2), width, height));
 		System.out.println(array);
 		Display display = new Display(title,width,height,launcher);
 		display.start();
