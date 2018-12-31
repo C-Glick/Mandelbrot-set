@@ -10,6 +10,9 @@ public class Launcher {
 	static int width = 1080;
 	static int height = 1080;
 	static double [][] array;
+	
+	static double threshold = 2;
+	static int limit = 100; 
 
 	public static void main(String[] args) {
 	
@@ -36,7 +39,7 @@ public class Launcher {
 	    			   g.setColor(Color.BLACK);
 	    		   }else {
 	    			   
-		    		   g.setColor(Color.getHSBColor((float)(iterations/100), 1, 1));			//set the color with by creating a HSB color,
+		    		   g.setColor(Color.getHSBColor((float)(iterations/limit), 1, 1));			//set the color with by creating a HSB color,
 	    		   }
 	    		   
 	    		   g.drawRect(x, y, 1, 1);										//set the pixel at x,y to the color

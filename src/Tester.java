@@ -1,7 +1,7 @@
 
 public class Tester {
-	double threshold=2;
-	int limit=100;		//number of iterations to run before stopping
+	double threshold=Launcher.threshold;
+	int limit=Launcher.limit;		//number of iterations to run before stopping
 	
 	
 	public double test1(Complex c) {		//test for just one complex number, returns the number of iterations it took to reach the threshold. will be 0 if it surpass the limit
