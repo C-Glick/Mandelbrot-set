@@ -10,15 +10,24 @@ public class Launcher {
 	static int width = 1000;
 	static int height = 1000;
 	static double [][] array;
+	static boolean enableGrid = false;
 	
 	static double threshold = 2;
-	static int limit = 50; 				//think of this as the resolution of the graph, the more the function is allowed to iterate, the more detailed the result
+	static int limit = 100; 				//think of this as the resolution of the graph, the more the function is allowed to iterate, the more detailed the result
+	static double scale = 4;
+	//static Complex topLeft = new Complex(-3,2);
+	//static Complex bottomRight = new Complex(1,-2);
+	
+	static Complex topLeft = new Complex(-3.0*(1/scale),2.0*(1/scale));
+	static Complex bottomRight = new Complex(1.0*(1/scale),-2.0*(1/scale));
 
 	public static void main(String[] args) {
 	
 		Launcher launcher = new Launcher();
 		Tester tester = new Tester();
-		launcher.setArray(tester.test2(new Complex(-2,2), new Complex(2,-2), width, height));
+		
+		
+		launcher.setArray(tester.test2(topLeft, bottomRight, width, height));
 		System.out.println(array);
 		Display display = new Display(title,width,height,launcher);
 		display.start();
@@ -34,16 +43,19 @@ public class Launcher {
 	       for (int x=0;x<width;x++) {
 	    	   for (int y=0;y<height;y++) {
 	    		   
-	    		   double iterations = array[x][y];
-	    		   if (iterations==0) {					//is in set
+	    		   double result = array[x][y];
+	    		   if (result==0) {					//is in set
 	    			   g.setColor(Color.BLACK);
-	    		   }else {
-	    			   
-		    		   g.setColor(Color.getHSBColor((float)(iterations/limit), 1, 1));			//set the color with by creating a HSB color,
+	    		   }else { 
+		    		   g.setColor(Color.getHSBColor((float)(result/limit), 1, 1));			//set the color with by creating a HSB color,
 	    		   }
-	    		   
 	    		   g.drawRect(x, y, 1, 1);										//set the pixel at x,y to the color
 	    	   }
+	       }
+	     
+	       //TODO: create grid display
+	       if(enableGrid) {
+	    	   
 	       }
 	}
 	

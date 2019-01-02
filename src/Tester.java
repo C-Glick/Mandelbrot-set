@@ -32,7 +32,7 @@ public class Tester {
 			double real= ((bottomRight.getReal()-topLeft.getReal())/width)*x+topLeft.getReal();
 			
 			for(int y=0;y<height;y++) {
-				double imag= -(((bottomRight.getReal()-topLeft.getReal())/height)*y+topLeft.getReal());
+				double imag= -(((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag());
 				//System.out.println(real+" "+imag);
 				result[x][y] = test1(new Complex(real,imag));
 			}
