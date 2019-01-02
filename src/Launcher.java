@@ -15,11 +15,17 @@ public class Launcher {
 	static double threshold = 2;
 	static int limit = 100; 				//think of this as the resolution of the graph, the more the function is allowed to iterate, the more detailed the result
 	static double scale = 4;
-	//static Complex topLeft = new Complex(-3,2);
-	//static Complex bottomRight = new Complex(1,-2);
+	static Complex center = new Complex (-1,0);		//the center of the window, determines the bounds of the window from this number
 	
-	static Complex topLeft = new Complex(-3.0*(1/scale),2.0*(1/scale));
-	static Complex bottomRight = new Complex(1.0*(1/scale),-2.0*(1/scale));
+	//static Complex topLeft = new Complex(-2,2);
+	//static Complex bottomRight = new Complex(2,-2);
+	
+	//static Complex topLeft = new Complex(-3.0*(1/scale),2.0*(1/scale));
+	//static Complex bottomRight = new Complex(1.0*(1/scale),-2.0*(1/scale));
+	
+	static Complex topLeft = new Complex(center.getReal()-(1/scale),center.getImag()-(1/scale));
+	static Complex bottomRight = new Complex(center.getReal()+(1/scale),center.getImag()+(1/scale));
+
 
 	public static void main(String[] args) {
 	

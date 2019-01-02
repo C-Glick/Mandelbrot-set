@@ -21,6 +21,7 @@ public class Display extends Canvas{
 	
 	public void start() {
 		JFrame frame = new JFrame(title);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Canvas canvas = new Display(title,height,width,launcher);
 		canvas.setSize(width, height);
 		frame.add(canvas);
