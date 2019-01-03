@@ -13,7 +13,6 @@ public class Tester {
 			z.sqr();
 			z.add(c);
 			double value = z.abs();
-			//System.out.println(value);
 			if (value>=threshold) {
 				result = i;
 				break;
@@ -33,7 +32,6 @@ public class Tester {
 			
 			for(int y=0;y<height;y++) {
 				double imag= -(((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag());
-				//System.out.println(real+" "+imag);
 				result[x][y] = test1(new Complex(real,imag));
 			}
 			

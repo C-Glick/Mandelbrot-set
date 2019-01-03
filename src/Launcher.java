@@ -1,9 +1,5 @@
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Polygon;
-import java.awt.image.BufferStrategy;
-
 
 public class Launcher {
 	static String title = "The MandelBrot Set";
@@ -13,15 +9,9 @@ public class Launcher {
 	static boolean enableGrid = false;
 	
 	static double threshold = 2;
-	static int limit = 100; 				//think of this as the resolution of the graph, the more the function is allowed to iterate, the more detailed the result
-	static double scale = 4;
-	static Complex center = new Complex (-1,0);		//the center of the window, determines the bounds of the window from this number
-	
-	//static Complex topLeft = new Complex(-2,2);
-	//static Complex bottomRight = new Complex(2,-2);
-	
-	//static Complex topLeft = new Complex(-3.0*(1/scale),2.0*(1/scale));
-	//static Complex bottomRight = new Complex(1.0*(1/scale),-2.0*(1/scale));
+	static int limit =100; 				//think of this as the resolution of the graph, the more the function is allowed to iterate, the more detailed the result
+	static double scale = 500;
+	static Complex center = new Complex (-0.79,0.15);		//the center of the window, determines the bounds of the window from this number
 	
 	static Complex topLeft = new Complex(center.getReal()-(1/scale),center.getImag()-(1/scale));
 	static Complex bottomRight = new Complex(center.getReal()+(1/scale),center.getImag()+(1/scale));
@@ -34,15 +24,9 @@ public class Launcher {
 		
 		
 		launcher.setArray(tester.test2(topLeft, bottomRight, width, height));
-		System.out.println(array);
 		Display display = new Display(title,width,height,launcher);
 		display.start();
 		
-		//Complex a = new Complex(0,0.27);
-		//Tester tester = new Tester();
-		//System.out.println(a.abs());
-		
-		//System.out.println(tester.test1(a));
 	}
 
 	public void render(Graphics g) {		//this render method is called from the display class after the canvas is visible
@@ -66,6 +50,6 @@ public class Launcher {
 	}
 	
 	public void setArray(double [][] input) {
-		this.array = input;
+		Launcher.array = input;
 	}
 }
