@@ -8,6 +8,8 @@ public class Display extends Canvas{
 	int width; 
 	int height;
 	Launcher launcher;
+	JFrame frame;
+	Graphics g;
 
 	
 	Display(String title,int width, int height, Launcher launcher){
@@ -18,7 +20,7 @@ public class Display extends Canvas{
 	}
 	
 	public void start() {
-		JFrame frame = new JFrame(title);
+		frame = new JFrame(title);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.addKeyListener(launcher.getKeyManager());
 		
@@ -28,9 +30,20 @@ public class Display extends Canvas{
 		frame.add(canvas);
 		frame.pack();
 		frame.setVisible(true);
+		g = canvas.getGraphics();
 	}
 	
 	 public void paint(Graphics g) {
+		 launcher.render(g);
+	 }
+	 /**
+	  * custom repaint method
+	  */
+	 public void repaint() {
+		 if(g==null) {
+			 System.out.println("must call paint method before repaint");
+			 return;
+		 }
 		 launcher.render(g);
 	 }
 }
