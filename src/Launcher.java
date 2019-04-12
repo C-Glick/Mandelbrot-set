@@ -35,7 +35,10 @@ public class Launcher {
 	}
 	
 	public void refresh() {
+		display.updateUI();
+		System.out.println("clac");
 		calculate(this);
+		System.out.println("paint");
 		getDisplay().repaint();
 	}
 	
