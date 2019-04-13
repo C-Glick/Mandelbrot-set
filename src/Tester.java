@@ -1,5 +1,6 @@
+import javax.swing.SwingWorker;
 
-public class Tester {
+public class Tester{
 	double threshold=Launcher.threshold;
 	int limit=Launcher.limit;		//number of iterations to run before stopping
 	
