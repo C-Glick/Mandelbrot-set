@@ -8,15 +8,24 @@ import java.awt.Graphics;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+
 import javax.swing.JMenu;
 import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.JMenuItem;
 //this class handles the display window that the game runs it
 public class Display extends Canvas{
 	String title;
@@ -34,6 +43,7 @@ public class Display extends Canvas{
 	JProgressBar progressBar;
 	
 	Font font = new Font("Arial Unicode MS", Font.PLAIN, 14);
+	private JButton resetButton;
 	
  
 	
@@ -62,9 +72,9 @@ public class Display extends Canvas{
 		
 		topBar = new JPanel();										//create top  bar
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{120, 71, 103, 0};
+		gbl_panel.columnWidths = new int[]{120, 71, 65, 103, 0};
 		gbl_panel.rowHeights = new int[]{0, 21, 0};
-		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		topBar.setLayout(gbl_panel);
 		frame.getContentPane().add(topBar, BorderLayout.NORTH);
@@ -80,17 +90,21 @@ public class Display extends Canvas{
 		topBar.add(scaleDisplay, gbc_scale);
 		
 		centerXDisplay = new JLabel("X = " + Launcher.center.getReal());
+		centerXDisplay.setFont(font);
 		GridBagConstraints gbc_centerXDisplay = new GridBagConstraints();
 		gbc_centerXDisplay.insets = new Insets(0, 0, 5, 5);
 		gbc_centerXDisplay.gridx = 1;
 		gbc_centerXDisplay.gridy = 0;
+		centerXDisplay.setToolTipText("Center X value");
 		topBar.add(centerXDisplay, gbc_centerXDisplay);
 		
 		centerYDisplay = new JLabel("Y = " + Launcher.center.getImag());
+		centerYDisplay.setFont(font);
 		GridBagConstraints gbc_centerYDisplay = new GridBagConstraints();
 		gbc_centerYDisplay.insets = new Insets(0, 0, 0, 5);
 		gbc_centerYDisplay.gridx = 1;
 		gbc_centerYDisplay.gridy = 1;
+		centerYDisplay.setToolTipText("Center Y value");
 		topBar.add(centerYDisplay, gbc_centerYDisplay);
 		
 		
@@ -103,12 +117,31 @@ public class Display extends Canvas{
 		gbc_limitDisplay.gridy = 1;
 		topBar.add(limitDisplay, gbc_limitDisplay);
 		
+		
+		
+		resetButton = new JButton("Reset");
+		resetButton.setFocusable(false);
+		resetButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				launcher.setCenter(new Complex(0,0));
+				launcher.setScale(1);
+				launcher.setLimit(150);
+				launcher.refresh();
+			}
+		});
+		GridBagConstraints gbc_resetButton = new GridBagConstraints();
+		gbc_resetButton.insets = new Insets(0, 0, 0, 5);
+		gbc_resetButton.gridx = 2;
+		gbc_resetButton.gridy = 1;
+		topBar.add(resetButton, gbc_resetButton);
+
+		
 		progressBar = new JProgressBar();
 		progressBar.setIndeterminate(false);
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
 		gbc_progressBar.fill = GridBagConstraints.VERTICAL;
 		gbc_progressBar.anchor = GridBagConstraints.WEST;
-		gbc_progressBar.gridx = 2;
+		gbc_progressBar.gridx = 3;
 		gbc_progressBar.gridy = 1;
 		topBar.add(progressBar, gbc_progressBar);
 		
@@ -116,6 +149,7 @@ public class Display extends Canvas{
 		Canvas canvas = new Display(title,height,width,launcher);
 		canvas.setSize(width, height);
 		canvas.setFocusable(false);
+		canvas.addMouseListener(launcher.getMouseManager());
 		frame.getContentPane().add(canvas);	
 		
 		
@@ -127,6 +161,8 @@ public class Display extends Canvas{
 	public void updateUI() {
 		scaleDisplay.setText("Scale = " + launcher.getScale());
 		limitDisplay.setText("Limit = " + launcher.getLimit());
+		centerXDisplay.setText("X = "+launcher.center.real);
+		centerYDisplay.setText("Y = "+launcher.center.imag);
 		
 	}
 	
@@ -170,5 +206,22 @@ public class Display extends Canvas{
 	       if(Launcher.enableGrid) {
 	    	   
 	       }
+	}
+	private static void addPopup(Component component, final JPopupMenu popup) {
+		component.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			public void mouseReleased(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			private void showMenu(MouseEvent e) {
+				popup.show(e.getComponent(), e.getX(), e.getY());
+			}
+		});
 	}
 }

@@ -5,6 +5,7 @@ public class Launcher {
 	static int width = 1000;
 	static int height = 1000;
 	static KeyManager keyManager;
+	static MouseManager mouseManager;
 	static Tester tester;
 	static Display display;
 	static double [][] resultsArray;
@@ -18,16 +19,13 @@ public class Launcher {
 	static int limit =150; 									//think of this as the resolution of the graph, the more the function is allowed to iterate, the more detailed the result. This is the maximum number of iterations
 	static double scale = 1;								//the scale of the graph, a higher number is more zoomed in
 	static Complex center = new Complex (-0.79,0.15);		//the center of the window, determines the bounds of the window from this number,
-	
-	
-	
-
 
 	public static void main(String[] args) {
 	
 		Launcher launcher = new Launcher();							//creates a new launcher object
 		tester = new Tester();										//creates a new tester
 		keyManager = new KeyManager(launcher);						//creates a the key listener
+		mouseManager = new MouseManager (launcher);
 		
 		launcher.calculate(launcher);								//calculate the default values
 
@@ -41,7 +39,6 @@ public class Launcher {
 			Updater updater = new Updater(this);
 			updater.start();
 			}
-		
 	}
 	
 	
@@ -61,6 +58,13 @@ public class Launcher {
 		launcher.setResultsArray(tester.test2(topLeft, bottomRight, width, height));						//tell the tester object to run test #2 given the topLeft and bottomRight Complex numbers
 																											//then saves the results to resultsArray
 	}
+	
+	public void setCenter(int x, int y) {
+		Complex complex = new Complex(((bottomRight.getReal()-topLeft.getReal())/width)*x+topLeft.getReal(),
+				(((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag()));
+		setCenter(complex);
+	}
+	
 	public void setResultsArray(double [][] input) {
 		Launcher.resultsArray = input;
 	}
@@ -78,6 +82,9 @@ public class Launcher {
 	
 	public KeyManager getKeyManager() {
 		return Launcher.keyManager;
+	}
+	public MouseManager getMouseManager() {
+		return Launcher.mouseManager;
 	}
 	public double getScale() {
 		return Launcher.scale;
