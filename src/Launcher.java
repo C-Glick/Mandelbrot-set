@@ -1,4 +1,5 @@
 import java.awt.Font;
+import java.math.BigDecimal;
 
 public class Launcher {
 	static String title = "The MandelBrot Set";
@@ -8,10 +9,15 @@ public class Launcher {
 	static MouseManager mouseManager;
 	static Tester tester;
 	static Display display;
-	static double [][] resultsArray;
+	static long [][] resultsArray;
 	static Complex topLeft;
 	static Complex bottomRight;
 	boolean isUpdaterWorking;
+	
+	boolean highPrecision = false;			//high precision variables
+	static ComplexLong topLeftHP;
+	static ComplexLong bottomRightHP;
+	static ComplexLong centerHP = new ComplexLong(new BigDecimal(-1),new BigDecimal(-1));
 	
 	static boolean enableGrid = false;
 	
@@ -47,16 +53,20 @@ public class Launcher {
 	 * @param launcher The launcher with the desired values.
 	 */
 	public void calculate(Launcher launcher) {
-		/*if(limit/scale < 1) {
-			setLimit(getLimit()*5);
-			System.out.println("adjust limit,"+ getLimit() );
+		if(!highPrecision) {																				//low precision
+			topLeft = new Complex(center.getReal()-(1/scale),center.getImag()-(1/scale));					//Determine the complex numbers that correspond to the topLeft and bottom right pixels of the window
+			bottomRight = new Complex(center.getReal()+(1/scale),center.getImag()+(1/scale));
+			
+			launcher.setResultsArray(tester.test2(topLeft, bottomRight, width, height));						//tell the tester object to run test #2 given the topLeft and bottomRight Complex numbers
+																												//then saves the results to resultsArray
+		}else {																								//high precision
+			BigDecimal inverseScale = (new BigDecimal("1").divide(new BigDecimal(Double.toString(scale))));
+			
+			topLeftHP = new ComplexLong(centerHP.getReal().subtract(inverseScale),centerHP.getImag().subtract(inverseScale));
+			bottomRightHP = new ComplexLong (centerHP.getReal().add(inverseScale),centerHP.getImag().add(inverseScale));
+			launcher.setResultsArray(tester.test4(topLeftHP, bottomRightHP, width, height));
+			
 		}
-		*/
-		topLeft = new Complex(center.getReal()-(1/scale),center.getImag()-(1/scale));					//Determine the complex numbers that correspond to the topLeft and bottom right pixels of the window
-		bottomRight = new Complex(center.getReal()+(1/scale),center.getImag()+(1/scale));
-		
-		launcher.setResultsArray(tester.test2(topLeft, bottomRight, width, height));						//tell the tester object to run test #2 given the topLeft and bottomRight Complex numbers
-																											//then saves the results to resultsArray
 	}
 	
 	public void setCenter(int x, int y) {
@@ -65,7 +75,7 @@ public class Launcher {
 		setCenter(complex);
 	}
 	
-	public void setResultsArray(double [][] input) {
+	public void setResultsArray(long [][] input) {
 		Launcher.resultsArray = input;
 	}
 	public void setScale(double input) {
@@ -74,10 +84,15 @@ public class Launcher {
 	}
 	public void setCenter (Complex input) {
 		Launcher.center = input;
+		Launcher.centerHP = new ComplexLong(new BigDecimal(input.getReal()),new BigDecimal(input.getImag()));
 	}
 	public void setLimit (int input) {
 		Launcher.limit = input;
 		System.out.println("New limit: " + Launcher.limit );
+	}
+	public void setHighPrecision(boolean input) {
+		highPrecision = input;
+		System.out.println("high precision set to "+input);
 	}
 	
 	public KeyManager getKeyManager() {

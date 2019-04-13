@@ -44,6 +44,8 @@ public class Display extends Canvas{
 	
 	Font font = new Font("Arial Unicode MS", Font.PLAIN, 14);
 	private JButton resetButton;
+	private JButton highPrecisionBtn;
+	private JButton lowPrecisionBtn;
 	
  
 	
@@ -72,9 +74,9 @@ public class Display extends Canvas{
 		
 		topBar = new JPanel();										//create top  bar
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{120, 71, 65, 103, 0};
+		gbl_panel.columnWidths = new int[]{120, 71, 65, 107, 103, 0};
 		gbl_panel.rowHeights = new int[]{0, 21, 0};
-		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		topBar.setLayout(gbl_panel);
 		frame.getContentPane().add(topBar, BorderLayout.NORTH);
@@ -98,6 +100,7 @@ public class Display extends Canvas{
 		centerXDisplay.setToolTipText("Center X value");
 		topBar.add(centerXDisplay, gbc_centerXDisplay);
 		
+		
 		centerYDisplay = new JLabel("Y = " + Launcher.center.getImag());
 		centerYDisplay.setFont(font);
 		GridBagConstraints gbc_centerYDisplay = new GridBagConstraints();
@@ -107,7 +110,6 @@ public class Display extends Canvas{
 		centerYDisplay.setToolTipText("Center Y value");
 		topBar.add(centerYDisplay, gbc_centerYDisplay);
 		
-		
 		limitDisplay = new JLabel("Limit = " + launcher.getLimit());
 		limitDisplay.setFont(font);
 		GridBagConstraints gbc_limitDisplay= new GridBagConstraints();
@@ -116,8 +118,6 @@ public class Display extends Canvas{
 		gbc_limitDisplay.gridx = 0;
 		gbc_limitDisplay.gridy = 1;
 		topBar.add(limitDisplay, gbc_limitDisplay);
-		
-		
 		
 		resetButton = new JButton("Reset");
 		resetButton.setFocusable(false);
@@ -134,14 +134,47 @@ public class Display extends Canvas{
 		gbc_resetButton.gridx = 2;
 		gbc_resetButton.gridy = 1;
 		topBar.add(resetButton, gbc_resetButton);
-
 		
+		highPrecisionBtn = new JButton("High Precision");
+		highPrecisionBtn.setFocusable(false);
+		highPrecisionBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				lowPrecisionBtn.setEnabled(true);
+				highPrecisionBtn.setEnabled(false);
+				
+				launcher.setHighPrecision(true);
+				launcher.refresh();
+			}
+		});
+		GridBagConstraints gbc_highPrecisionBtn = new GridBagConstraints();
+		gbc_highPrecisionBtn.insets = new Insets(0, 0, 0, 5);
+		gbc_highPrecisionBtn.gridx = 3;
+		gbc_highPrecisionBtn.gridy = 1;
+		topBar.add(highPrecisionBtn, gbc_highPrecisionBtn);
+		
+		lowPrecisionBtn = new JButton("Low Precision");
+		lowPrecisionBtn.setFocusable(false);
+		lowPrecisionBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				lowPrecisionBtn.setEnabled(false);
+				highPrecisionBtn.setEnabled(true);
+				
+				launcher.setHighPrecision(false);
+				launcher.refresh();
+			}
+		});
+		GridBagConstraints gbc_lowPrecisionBtn = new GridBagConstraints();
+		gbc_lowPrecisionBtn.insets = new Insets(0, 0, 5, 5);
+		gbc_lowPrecisionBtn.gridx = 3;
+		gbc_lowPrecisionBtn.gridy = 0;
+		topBar.add(lowPrecisionBtn, gbc_lowPrecisionBtn);
+
 		progressBar = new JProgressBar();
 		progressBar.setIndeterminate(false);
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
 		gbc_progressBar.fill = GridBagConstraints.VERTICAL;
 		gbc_progressBar.anchor = GridBagConstraints.WEST;
-		gbc_progressBar.gridx = 3;
+		gbc_progressBar.gridx = 4;
 		gbc_progressBar.gridy = 1;
 		topBar.add(progressBar, gbc_progressBar);
 		

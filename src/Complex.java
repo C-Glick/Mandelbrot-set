@@ -27,26 +27,14 @@ public class Complex {
 				imag = O + I;
 	}
 	
-	public void sqr() {		//squares this object
-		//(2+5i)^2 = (2+5i)*(2+5i) need to use the FOIL method
-		
-		double F = this.getReal() * this.getReal();	 //will give some real number
-		double O = this.getReal() * this.getImag();  //will give some number*i
-		double I = O; 								 //because both of the binomials are the same, the I and O values are the same
-		double L = this.getImag() * this.getImag();  //will give some number*i^2, i^2 is the same as -1 so this number should be inverted
-		L = L * -1;
-		
-		//combine and simplify
-		real = F + L;
-		imag = O + I;
+	public void sqr() {		//squares this object		
+		this.multiply(this);
 		
 	}
 	
 	public double abs() {			//returns the absolute value of this complex number using the pythagorean theorem
-		double x = Math.abs(this.getReal());
-		double y = Math.abs(this.getImag());
 		
-		double result = Math.sqrt(Math.pow(x,2) + Math.pow(y,2));
+		double result = Math.sqrt(Math.pow(getReal(),2) + Math.pow(getImag(),2));
 		return result;
 	}
 	
