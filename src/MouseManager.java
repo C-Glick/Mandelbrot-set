@@ -10,8 +10,15 @@ public class MouseManager implements MouseListener{
 	@Override
 	public void mouseClicked(MouseEvent event) {
 		System.out.println("Mouse clicked at x="+event.getX()+" y="+event.getY());
-		launcher.setCenter(event.getX(),event.getY());
-		launcher.refresh();
+		
+		if(launcher.highPrecision) {
+			launcher.setCenterHP(event.getX(),event.getY());
+			launcher.refresh();
+		}else {
+			launcher.setCenter(event.getX(),event.getY());
+			launcher.refresh();
+		}
+		
 	}
 
 	@Override

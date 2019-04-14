@@ -223,11 +223,11 @@ public class Display extends Canvas{
 	       for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
 	    	   for (int y=0;y<Launcher.height;y++) {
 	    		   
-	    		   double result = Launcher.resultsArray[x][y];				//get the result of the complex number at each pixel location
+	    		   long result = Launcher.resultsArray[x][y];				//get the result of the complex number at each pixel location
 	    		   if (result==0) {			//is in set
 	    			   g.setColor(Color.BLACK);
 	    		   }else { 
-		    		   g.setColor(Color.getHSBColor((float)(result/Launcher.limit), 1, 1));			//set the color with by creating a HSB color, set the hue to be the result(number of iterations to reach threshold) divided by the limit (max number of iterations), 
+		    		   g.setColor(Color.getHSBColor(((float)result/Launcher.limit), 1, 1));			//set the color with by creating a HSB color, set the hue to be the result(number of iterations to reach threshold) divided by the limit (max number of iterations), 
 	    		   }
 	    		   g.drawRect(x, y, 1, 1);										//set the pixel at x,y to the color
 	    		   //TODO: is there a faster way to set pixel colors?

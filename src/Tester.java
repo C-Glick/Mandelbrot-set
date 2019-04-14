@@ -64,7 +64,7 @@ public class Tester{
 	public long test3(ComplexLong c) {
 		BigDecimal thresholdHP = new BigDecimal(Double.toString(threshold));
 		
-		ComplexLong z = new ComplexLong(new BigDecimal(0),new BigDecimal(0));
+		ComplexLong z = new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO);
 		long result= 0;
 		
 		for(long i=1; i<=limit; i++) {
@@ -91,10 +91,12 @@ public class Tester{
 	 * @return	A 2D array of longs showing the number of iterations taken.
 	 * @see test2
 	 */
-	public long[][] test4(ComplexLong topLeftHP, ComplexLong bottomRightHP, int width, int height){
+	public long[][] test4(ComplexLong topLeftHP, ComplexLong bottomRightHP, BigDecimal widthHP, BigDecimal heightHP){
+		int width = widthHP.intValue();
+		int height = heightHP.intValue();
+		
 		long[][] result = new long[width][height];
-		BigDecimal widthHP = new BigDecimal(width);
-		BigDecimal heightHP = new BigDecimal(height);
+		
 		
 		limit = Launcher.limit;
 		
@@ -103,10 +105,13 @@ public class Tester{
 		for(int x=0; x<width; x++) {
 			BigDecimal real = ((bottomRightHP.getReal().subtract(topLeftHP.getReal())).divide(widthHP))
 								.multiply(topLeftHP.getReal().add(new BigDecimal(x)));
+			real.precision();
+
 			
 			for(int y=0; y<height; y++) {
 				BigDecimal imag= (((bottomRightHP.getImag().subtract(topLeftHP.getImag())).divide(heightHP))
 								.multiply(topLeftHP.getImag().add(new BigDecimal(y)))).negate();
+				imag.precision();
 				result[x][y] = test3(new ComplexLong(real,imag));
 			}
 		}

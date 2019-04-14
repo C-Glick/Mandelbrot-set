@@ -1,4 +1,5 @@
 import java.math.BigDecimal;
+import java.math.MathContext;
 
 /**
  * The same as the complex class but uses the BigDecimal class to create high precision complex numbers.
@@ -64,7 +65,7 @@ public class ComplexLong {
 	public BigDecimal abs() {
 		
 		BigDecimal radicand = (getReal().pow(2)).add((getImag()).pow(2));
-		BigDecimal result = BigRoot.sqrt(radicand, 1000);							//TODO: what should the scale be for this sqrt method?
+		BigDecimal result = radicand.sqrt(MathContext.DECIMAL64);							//TODO: what should the scale be for this sqrt method?
 		
 		return result;
 	}
