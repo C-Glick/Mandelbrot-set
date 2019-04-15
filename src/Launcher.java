@@ -3,8 +3,8 @@ import java.math.BigDecimal;
 
 public class Launcher {
 	static String title = "The MandelBrot Set";
-	static int width = 1000;
-	static int height = 1000;
+	static int width = 500;
+	static int height = 500;
 	static KeyManager keyManager;
 	static MouseManager mouseManager;
 	static Tester tester;
