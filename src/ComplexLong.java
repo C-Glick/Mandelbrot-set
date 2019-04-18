@@ -1,5 +1,6 @@
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 
 /**
  * The same as the complex class but uses the BigDecimal class to create high precision complex numbers.
@@ -9,6 +10,7 @@ import java.math.MathContext;
 public class ComplexLong {
 	BigDecimal real;
 	BigDecimal imag;
+	static MathContext rMode = new MathContext(32, RoundingMode.HALF_UP);	     //Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round up.
 	
 	/**
 	 * Complex number example: (2+5i), real = 2, imag = 5.
@@ -28,8 +30,8 @@ public class ComplexLong {
 	 * @param num A ComplexLong number to add to this object.
 	 */
 	public void add(ComplexLong num) {
-		real = getReal().add(num.getReal());
-		imag = getImag().add(num.getImag());
+		real = getReal().add(num.getReal(), rMode);
+		imag = getImag().add(num.getImag(), rMode);
 
 	}
 	
@@ -41,15 +43,15 @@ public class ComplexLong {
 	public void multiply(ComplexLong num) {
 		//(2+5i)*(3+8i) need to use the FOIL method
 		
-				BigDecimal F = getReal().multiply(num.getReal());		//will give some real number
-				BigDecimal O = getReal().multiply(num.getImag());		//will give some number*i
-				BigDecimal I = getImag().multiply(num.getReal());
-				BigDecimal L = getImag().multiply(num.getImag());		//will give some number*i^2, i^2 is the same as -1 so this number should be inverted
+				BigDecimal F = getReal().multiply(num.getReal(), rMode);		//will give some real number
+				BigDecimal O = getReal().multiply(num.getImag(), rMode);		//will give some number*i
+				BigDecimal I = getImag().multiply(num.getReal(), rMode);
+				BigDecimal L = getImag().multiply(num.getImag(), rMode);		//will give some number*i^2, i^2 is the same as -1 so this number should be inverted
 				L = L.negate();
 				
 				//combine and simplify
-				real = F.add(L);
-				imag = O.add(I);
+				real = F.add(L, rMode);
+				imag = O.add(I, rMode);
 	}
 	/**
 	 * Squares this object.
@@ -64,8 +66,8 @@ public class ComplexLong {
 	 */
 	public BigDecimal abs() {
 		
-		BigDecimal radicand = (getReal().pow(2)).add((getImag()).pow(2));
-		BigDecimal result = radicand.sqrt(MathContext.DECIMAL64);							//TODO: what should the scale be for this sqrt method?
+		BigDecimal radicand = (getReal().pow(2, rMode)).add((getImag()).pow(2, rMode), rMode);
+		BigDecimal result = radicand.sqrt(rMode);
 		
 		return result;
 	}
@@ -85,6 +87,17 @@ public class ComplexLong {
 	public void setImag(BigDecimal value) {
 		imag = value;
 	}
-
-
+	
+	/**
+	 * Set the maximum number of digits used for all ComplexLong calculations.
+	 * (default is 128 digits)
+	 * @param value an Integer, the maximum number of digits to use.
+	 */
+	public void setCalcPrecision(int value) {
+		rMode = new MathContext(value, RoundingMode.HALF_UP);	    //Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round up.
+																	//Updates the rMode object (rounding mode).
+																	//rMode is static so it changes for all ComplexLong objects
+		Launcher.rMode = rMode;			//also update rMode in the launcher as some math is also done there
+		Launcher.tester.rMode = rMode;
+	}
 }

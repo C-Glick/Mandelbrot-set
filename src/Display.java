@@ -1,7 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 
@@ -10,12 +9,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
-import javax.swing.JToolBar;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import javax.swing.JMenu;
-import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -25,7 +21,6 @@ import java.awt.event.ActionEvent;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import javax.swing.JMenuItem;
 //this class handles the display window that the game runs it
 public class Display extends Canvas{
 	String title;
@@ -171,6 +166,7 @@ public class Display extends Canvas{
 
 		progressBar = new JProgressBar();
 		progressBar.setIndeterminate(false);
+		progressBar.setStringPainted(true);
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
 		gbc_progressBar.fill = GridBagConstraints.VERTICAL;
 		gbc_progressBar.anchor = GridBagConstraints.WEST;

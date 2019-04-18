@@ -1,10 +1,12 @@
 import java.math.BigDecimal;
+import java.math.MathContext;
 
 import javax.swing.SwingWorker;
 
 public class Tester{
 	double threshold=Launcher.threshold;
 	int limit=Launcher.limit;		//number of iterations to run before stopping
+	MathContext rMode = ComplexLong.rMode;
 	
 	
 	/**
@@ -45,14 +47,23 @@ public class Tester{
 		
 		limit = Launcher.limit;
 		
+		if(!Launcher.firstBoot) {
+			//set progress bar data
+			Launcher.display.progressBar.setMinimum(0);
+			Launcher.display.progressBar.setMaximum(width*height);
+		}
+
+		
 		//finds the complex numbers based on the pixel numbers
 		//then tests those numbers 
 		for(int x=0; x<width; x++) {
 			double real= ((bottomRight.getReal()-topLeft.getReal())/width)*x+topLeft.getReal();
 			
 			for(int y=0;y<height;y++) {
-				double imag= -(((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag());
+				double imag= (((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag());
 				result[x][y] = test1(new Complex(real,imag));
+				if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue((x*height)+y);}  //update progress bar
+
 			}
 			
 		}
@@ -61,6 +72,15 @@ public class Tester{
 	
 	//tests 3 and 4 are for high precision calculations
 	
+	/**
+	 * The same as test1 but for High Precision.
+	 * Tests if a single ComplexLong number is in the Mandelbrot set.
+	 * If not returns the number of iterations taken to exceed the threshold.
+	 * @param c The ComplexLong to test.
+	 * @return A long telling the number of iterations taken to exceed the set threshold
+	 * 		   returns 0 if the number is in the set (does not exceed the threshold within the set limit).
+	 * @see test1
+	 */
 	public long test3(ComplexLong c) {
 		BigDecimal thresholdHP = new BigDecimal(Double.toString(threshold));
 		
@@ -97,22 +117,27 @@ public class Tester{
 		
 		long[][] result = new long[width][height];
 		
-		
 		limit = Launcher.limit;
+		
+		if(!Launcher.firstBoot) {
+			//set progress bar data
+			Launcher.display.progressBar.setMinimum(0);
+			Launcher.display.progressBar.setMaximum(width*height);
+		}
+		
 		
 		//finds the complex numbers based on the pixel numbers
 		//then tests those numbers 
 		for(int x=0; x<width; x++) {
-			BigDecimal real = ((bottomRightHP.getReal().subtract(topLeftHP.getReal())).divide(widthHP))
-								.multiply(topLeftHP.getReal().add(new BigDecimal(x)));
-			real.precision();
-
+			BigDecimal real = ((bottomRightHP.getReal().subtract(topLeftHP.getReal(),rMode)).divide(widthHP,rMode))
+								.multiply(new BigDecimal(x),rMode).add(topLeftHP.getReal());
+			
 			
 			for(int y=0; y<height; y++) {
-				BigDecimal imag= (((bottomRightHP.getImag().subtract(topLeftHP.getImag())).divide(heightHP))
-								.multiply(topLeftHP.getImag().add(new BigDecimal(y)))).negate();
-				imag.precision();
+				BigDecimal imag= ((bottomRightHP.getImag().subtract(topLeftHP.getImag(),rMode)).divide(heightHP,rMode))
+								.multiply(new BigDecimal(y),rMode).add(topLeftHP.getImag(),rMode);
 				result[x][y] = test3(new ComplexLong(real,imag));
+				if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue((x*height)+y);}  //update progress bar
 			}
 		}
 		return result;
