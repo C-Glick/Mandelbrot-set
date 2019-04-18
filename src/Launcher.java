@@ -21,7 +21,7 @@ public class Launcher {
 	static double threshold = 2;							//threshold for the test, stops once the value grows higher than this (default is 2)
 	static int limit =150; 									//think of this as the resolution of the graph, the more the function is allowed to iterate, the more detailed the result. This is the maximum number of iterations
 	static double scale = 1;								//the scale of the graph, a higher number is more zoomed in
-	static Complex center = new Complex (-0.79,0.15);		//the center of the window, determines the bounds of the window from this number,
+	static Complex center = new Complex (0,0);		//the center of the window, determines the bounds of the window from this number,
 
 	boolean highPrecision = false;			//high precision variables
 	static ComplexLong topLeftHP;
