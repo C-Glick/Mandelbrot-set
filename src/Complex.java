@@ -1,38 +1,68 @@
-
+/**
+ * A class to represent a complex number (2+3i) through a real 
+ * and an imaginary part.
+ * @author Colton Glick
+ *
+ */
 public class Complex {
 	double real;
 	double imag;
 	
+	/**
+	 * Construct a new Complex object.
+	 * @param real A double to represent the real portion of the complex number.
+	 * @param imag A double to represent the imaginary portion.
+	 */
 	Complex(double real,double imag) {	
 		this.real = real;
 		this.imag = imag;
 	}
 	
-	public void add(Complex num) {		//adds the provided value (num) to this object
-		real = real + num.getReal();
-		imag = imag + num.getImag();
+	/**
+	 * Adds the provided complex number to this object
+	 * @param num The Complex number to add to this object.
+	 */
+	public void add(Complex num) {
+		real = getReal() + num.getReal();
+		imag = getImag() + num.getImag();
 	}
 	
-	public void multiply(Complex num) {		//multiples this object by the value provided
+	/**
+	 * Multiples this object by the complex number provided.
+	 * @param num The complex number to multiply this by.
+	 */
+	public void multiply(Complex num) {		
 		//(2+5i)*(3+8i) need to use the FOIL method
 		
 				double F = this.getReal() * num.getReal();	 //will give some real number
 				double O = this.getReal() * num.getImag();  //will give some number*i
 				double I = this.getImag() * num.getReal(); 	
 				double L = this.getImag() * num.getImag();  //will give some number*i^2, i^2 is the same as -1 so this number should be inverted
-				L = L * -1;
 				
 				//combine and simplify
-				real = F + L;
+				real = F - L;
 				imag = O + I;
 	}
 	
-	public void sqr() {		//squares this object		
-		this.multiply(this);
+	/**
+	 * Squares this object.
+	 */
+	public void sqr() {
+		//multiply(this);
 		
+		double r = Math.pow(getReal(), 2) - Math.pow(getImag(), 2);			//F - L
+		double i = (getImag()*getReal())*2;									//(O or I) *2
+		
+		real = r;
+		imag = i;
 	}
 	
-	public double abs() {			//returns the absolute value of this complex number using the pythagorean theorem
+	/**
+	 * Returns the absolute value of this complex number using the pythagorean theorem.
+	 * The distance between the origin and this point.
+	 * @return A double giving the absolute value of the complex number
+	 */
+	public double abs() {			
 		
 		double result = Math.sqrt(Math.pow(getReal(),2) + Math.pow(getImag(),2));
 		return result;

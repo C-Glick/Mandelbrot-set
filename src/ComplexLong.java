@@ -47,17 +47,20 @@ public class ComplexLong {
 				BigDecimal O = getReal().multiply(num.getImag(), rMode);		//will give some number*i
 				BigDecimal I = getImag().multiply(num.getReal(), rMode);
 				BigDecimal L = getImag().multiply(num.getImag(), rMode);		//will give some number*i^2, i^2 is the same as -1 so this number should be inverted
-				L = L.negate();
 				
 				//combine and simplify
-				real = F.add(L, rMode);
+				real = F.subtract(L, rMode);
 				imag = O.add(I, rMode);
 	}
 	/**
 	 * Squares this object.
 	 */
 	public void sqr() {
-		this.multiply(this);
+		BigDecimal r = getReal().pow(2, rMode).subtract(getImag().pow(2,rMode),rMode);				//F - L
+		BigDecimal i = getImag().multiply(getReal(),rMode).multiply(BigDecimal.valueOf(2));			//(O or I) *2
+		real=r;
+		imag=i;
+		
 	}
 	
 	/**

@@ -3,7 +3,7 @@ import java.math.MathContext;
 
 public class Launcher {
 	static String title = "The MandelBrot Set";
-	static int width = 500;
+	static int width = 1000;
 	static int height = 500;
 	static KeyManager keyManager;
 	static MouseManager mouseManager;
@@ -63,8 +63,8 @@ public class Launcher {
 	public void calculate(Launcher launcher) {
 		
 		if(!highPrecision) {																				//low precision
-			topLeft = new Complex(center.getReal()-(1/scale),center.getImag()+(1/scale));					//Determine the complex numbers that correspond to the topLeft and bottom right pixels of the window
-			bottomRight = new Complex(center.getReal()+(1/scale),center.getImag()-(1/scale));
+			topLeft = new Complex(center.getReal()-(width/(scale*512)),center.getImag()+(height/(scale*512)));					//Determine the complex numbers that correspond to the topLeft and bottom right pixels of the window
+			bottomRight = new Complex(center.getReal()+(width/(scale*512)),center.getImag()-(height/(scale*512)));
 			
 			launcher.setResultsArray(tester.test2(topLeft, bottomRight, width, height));						//tell the tester object to run test #2 given the topLeft and bottomRight Complex numbers
 																												//then saves the results to resultsArray

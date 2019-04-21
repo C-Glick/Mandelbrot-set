@@ -1,10 +1,9 @@
 import java.math.BigDecimal;
 import java.math.MathContext;
 
-import javax.swing.SwingWorker;
-
 public class Tester{
 	double threshold=Launcher.threshold;
+	BigDecimal thresholdHP = BigDecimal.valueOf(Launcher.threshold);		//threshold doesn't really need high precision but a BigDecimal object is needed for calculations
 	int limit=Launcher.limit;		//number of iterations to run before stopping
 	MathContext rMode = ComplexLong.rMode;
 	
@@ -15,10 +14,9 @@ public class Tester{
 	 * @param c The complex number to test.
 	 * @return A long, telling the number of iterations taken to reach the threshold.
 	 */
-	public long test1(Complex c) {		
-											
+	public int test1(Complex c) {										
 		Complex z = new Complex(0,0);
-		long result=0;
+		int result=0;
 		
 		for (int i=1; i<=limit;	i++) {
 			z.sqr();
@@ -45,9 +43,9 @@ public class Tester{
 	public long[][] test2(Complex topLeft, Complex bottomRight,int width,int height){
 		long[][] result = new long[width][height];
 		
-		limit = Launcher.limit;
+		limit = Launcher.limit;		//update the limit to be the same as it is in Launcher
 		
-		if(!Launcher.firstBoot) {
+		if(!Launcher.firstBoot) {	//dont call progress bars on the first boot
 			//set progress bar data
 			Launcher.display.progressBar.setMinimum(0);
 			Launcher.display.progressBar.setMaximum(width*height);
@@ -60,7 +58,8 @@ public class Tester{
 			double real= ((bottomRight.getReal()-topLeft.getReal())/width)*x+topLeft.getReal();
 			
 			for(int y=0;y<height;y++) {
-				double imag= (((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag());
+				double imag= topLeft.getImag()-((topLeft.getImag()-bottomRight.getImag())/height)*y;
+				
 				result[x][y] = test1(new Complex(real,imag));
 				if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue((x*height)+y);}  //update progress bar
 
@@ -81,18 +80,16 @@ public class Tester{
 	 * 		   returns 0 if the number is in the set (does not exceed the threshold within the set limit).
 	 * @see test1
 	 */
-	public long test3(ComplexLong c) {
-		BigDecimal thresholdHP = new BigDecimal(Double.toString(threshold));
-		
+	public int test3(ComplexLong c) {
 		ComplexLong z = new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO);
-		long result= 0;
+		int result= 0;
 		
-		for(long i=1; i<=limit; i++) {
+		for(int i=1; i<=limit; i++) {
 			z.sqr();
 			z.add(c);
 			BigDecimal value = z.abs();
 			if(value.compareTo(thresholdHP)>=0) {
-				result= i;
+				result = i;
 				break;
 			}
 		}
@@ -130,18 +127,17 @@ public class Tester{
 		//then tests those numbers 
 		for(int x=0; x<width; x++) {
 			BigDecimal real = ((bottomRightHP.getReal().subtract(topLeftHP.getReal(),rMode)).divide(widthHP,rMode))
-								.multiply(new BigDecimal(x),rMode).add(topLeftHP.getReal());
+								.multiply(BigDecimal.valueOf(x),rMode).add(topLeftHP.getReal(),rMode);
 			
 			
 			for(int y=0; y<height; y++) {
 				BigDecimal imag= ((bottomRightHP.getImag().subtract(topLeftHP.getImag(),rMode)).divide(heightHP,rMode))
-								.multiply(new BigDecimal(y),rMode).add(topLeftHP.getImag(),rMode);
+								.multiply(BigDecimal.valueOf(y),rMode).add(topLeftHP.getImag(),rMode);
+				
 				result[x][y] = test3(new ComplexLong(real,imag));
 				if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue((x*height)+y);}  //update progress bar
 			}
 		}
 		return result;
 	}
-	
-
 }
