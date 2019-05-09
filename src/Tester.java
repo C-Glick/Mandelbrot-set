@@ -60,9 +60,15 @@ public class Tester{
 			for(int y=0;y<height;y++) {
 				double imag= topLeft.getImag()-((topLeft.getImag()-bottomRight.getImag())/height)*y;
 				
-				result[x][y] = test1(new Complex(real,imag));
+				//bulb checking
+				double q = Math.pow((real-0.25),2)+Math.pow(imag, 2);
+				if(q*(q+(real-0.25)) <= 0.25*Math.pow(imag, 2)) {
+					//if true number is in bulb so it has to be in the set (black)
+					result[x][y] = 0;
+				}else {
+					result[x][y] = test1(new Complex(real,imag));
+				}
 				if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue((x*height)+y);}  //update progress bar
-
 			}
 			
 		}
@@ -126,6 +132,8 @@ public class Tester{
 		//finds the complex numbers based on the pixel numbers
 		//then tests those numbers 
 		for(int x=0; x<width; x++) {
+			BigDecimal fourth = new BigDecimal("0.25");
+			
 			BigDecimal real = ((bottomRightHP.getReal().subtract(topLeftHP.getReal(),rMode)).divide(widthHP,rMode))
 								.multiply(BigDecimal.valueOf(x),rMode).add(topLeftHP.getReal(),rMode);
 			
@@ -134,7 +142,14 @@ public class Tester{
 				BigDecimal imag= ((bottomRightHP.getImag().subtract(topLeftHP.getImag(),rMode)).divide(heightHP,rMode))
 								.multiply(BigDecimal.valueOf(y),rMode).add(topLeftHP.getImag(),rMode);
 				
-				result[x][y] = test3(new ComplexLong(real,imag));
+				//bulb checking
+				BigDecimal q = (real.subtract(fourth)).pow(2).add(imag.pow(2));
+				if(q.multiply(q.add(real.subtract(fourth))).compareTo(fourth.multiply(imag.pow(2))) <=0 ) {
+					//if true number is in bulb so it has to be in the set (black)
+					result[x][y] = 0;
+				}else {
+					result[x][y] = test3(new ComplexLong(real,imag));
+				}
 				if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue((x*height)+y);}  //update progress bar
 			}
 		}
