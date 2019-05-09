@@ -118,6 +118,7 @@ public class Display extends Canvas{
 		resetButton.setFocusable(false);
 		resetButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				launcher.setHighPrecision(false);
 				launcher.setCenter(new Complex(0,0));
 				launcher.setScale(1);
 				launcher.setLimit(150);

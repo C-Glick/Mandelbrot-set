@@ -1,5 +1,7 @@
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 public class KeyManager implements KeyListener{
 	
@@ -21,17 +23,22 @@ public class KeyManager implements KeyListener{
 		pUp = keys[KeyEvent.VK_PAGE_UP];			//limit up
 		pDown = keys[KeyEvent.VK_PAGE_DOWN];		//limit down
 		
-		if(up) {
-			zoomIn();
-		}else if (down) {
-			zoomOut();
+		if(launcher.highPrecision) {
+			if(up) {zoomInHP();}
+				else if(down) {zoomOutHP();}
+			
+			if(pUp) {limitUp();}
+				else if (pDown) {limitDown();}	
 		}
 		
-		if(pUp) {
-			limitUp();
-		}else if (pDown) {
-			limitDown();
+		else {
+			if(up) {zoomIn();}
+				else if (down) {zoomOut();}
+			
+			if(pUp) {limitUp();}
+				else if (pDown) {limitDown();}
 		}
+		
 	}
 
 	@Override
@@ -50,8 +57,17 @@ public class KeyManager implements KeyListener{
 		launcher.refresh();
 	}
 	
+	public void zoomInHP() {
+		launcher.setScaleHP(launcher.getScaleHP().multiply(new BigDecimal(2),Launcher.rMode));
+		launcher.refresh();
+	}
+	
 	public void zoomOut() {
 		launcher.setScale(launcher.getScale()/2);
+		launcher.refresh();
+	}
+	public void zoomOutHP() {
+		launcher.setScaleHP(launcher.getScaleHP().divide(new BigDecimal(2),Launcher.rMode));
 		launcher.refresh();
 	}
 	

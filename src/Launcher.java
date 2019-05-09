@@ -3,8 +3,8 @@ import java.math.MathContext;
 
 public class Launcher {
 	static String title = "The MandelBrot Set";
-	static int width = 1000;
-	static int height = 500;
+	static int width = 500;
+	static int height =500;
 	static KeyManager keyManager;
 	static MouseManager mouseManager;
 	static Tester tester;
@@ -30,6 +30,7 @@ public class Launcher {
 	static ComplexLong centerHP = new ComplexLong(new BigDecimal(Double.toString(center.getReal())),new BigDecimal(Double.toString(center.getImag())));
 	static BigDecimal widthHP = new BigDecimal(width);
 	static BigDecimal heightHP = new BigDecimal(height);
+	static BigDecimal scaleHP = new BigDecimal(scale);
 	static MathContext rMode = ComplexLong.rMode;
 	
 	
@@ -62,17 +63,17 @@ public class Launcher {
 	 */
 	public void calculate(Launcher launcher) {
 		
-		if(!highPrecision) {																				//low precision
+		if(!highPrecision) { //low precision
 			topLeft = new Complex(center.getReal()-(width/(scale*512)),center.getImag()+(height/(scale*512)));					//Determine the complex numbers that correspond to the topLeft and bottom right pixels of the window
-			bottomRight = new Complex(center.getReal()+(width/(scale*512)),center.getImag()-(height/(scale*512)));
+			bottomRight = new Complex(center.getReal()+(width/(scale*512)),center.getImag()-(height/(scale*512)));				//scale is multiplied by 512 to give good initial size
 			
 			launcher.setResultsArray(tester.test2(topLeft, bottomRight, width, height));						//tell the tester object to run test #2 given the topLeft and bottomRight Complex numbers
 																												//then saves the results to resultsArray
-		}else {																								//high precision
-			BigDecimal inverseScale = (BigDecimal.ONE.divide(new BigDecimal(Double.toString(scale)),rMode));
+		}else { //high precision
+			BigDecimal correctedScale = scaleHP.multiply(new BigDecimal("512"));
 			
-			topLeftHP = new ComplexLong(centerHP.getReal().subtract(inverseScale,rMode),centerHP.getImag().add(inverseScale,rMode));
-			bottomRightHP = new ComplexLong (centerHP.getReal().add(inverseScale,rMode),centerHP.getImag().subtract(inverseScale,rMode));
+			topLeftHP = new ComplexLong(centerHP.getReal().subtract(widthHP.divide(correctedScale,rMode),rMode),centerHP.getImag().add(heightHP.divide(correctedScale,rMode),rMode));
+			bottomRightHP = new ComplexLong (centerHP.getReal().add(widthHP.divide(correctedScale,rMode),rMode),centerHP.getImag().subtract(heightHP.divide(correctedScale,rMode),rMode));
 			
 			launcher.setResultsArray(tester.test4(topLeftHP, bottomRightHP, widthHP, heightHP));
 			
@@ -86,6 +87,9 @@ public class Launcher {
 	public void setScale(double input) {
 		Launcher.scale = input;
 		System.out.println("new scale: " + Launcher.scale);
+	}
+	public void setScaleHP(BigDecimal input) {
+		Launcher.scaleHP = input;
 	}
 	
 	public void setCenter(int x, int y) {
@@ -119,6 +123,15 @@ public class Launcher {
 	}
 	public void setHighPrecision(boolean input) {
 		highPrecision = input;
+		if(input) {
+			centerHP = new ComplexLong(new BigDecimal(Double.toString(center.getReal())),new BigDecimal(Double.toString(center.getImag())));
+			widthHP = new BigDecimal(width);
+			heightHP = new BigDecimal(height);
+			scaleHP = new BigDecimal(scale);
+		}else {
+			scale = scaleHP.doubleValue();
+			center = new Complex(centerHP.real.doubleValue(), centerHP.imag.doubleValue());
+		}
 		System.out.println("high precision set to "+input);
 	}
 	
@@ -130,6 +143,9 @@ public class Launcher {
 	}
 	public double getScale() {
 		return Launcher.scale;
+	}
+	public BigDecimal getScaleHP() {
+		return Launcher.scaleHP;
 	}
 	public int getLimit() {
 		return Launcher.limit;
