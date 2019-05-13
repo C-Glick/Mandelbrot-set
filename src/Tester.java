@@ -1,11 +1,14 @@
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 public class Tester{
 	double threshold=Launcher.threshold;
 	BigDecimal thresholdHP = BigDecimal.valueOf(Launcher.threshold);		//threshold doesn't really need high precision but a BigDecimal object is needed for calculations
 	int limit=Launcher.limit;		//number of iterations to run before stopping
 	MathContext rMode = ComplexLong.rMode;
+	ForkJoinPool commonPool = ForkJoinPool.commonPool();
 	
 	
 	/**
@@ -40,9 +43,7 @@ public class Tester{
 	 * @return	A 2D array of longs showing the number of iterations taken.
 	 * @see test1
 	 */
-	public long[][] test2(Complex topLeft, Complex bottomRight,int width,int height){
-		long[][] result = new long[width][height];
-		
+	public void test2(Complex topLeft, Complex bottomRight,int width,int height){		
 		limit = Launcher.limit;		//update the limit to be the same as it is in Launcher
 		
 		if(!Launcher.firstBoot) {	//dont call progress bars on the first boot
@@ -64,15 +65,17 @@ public class Tester{
 				double q = Math.pow((real-0.25),2)+Math.pow(imag, 2);
 				if(q*(q+(real-0.25)) <= 0.25*Math.pow(imag, 2)) {
 					//if true number is in bulb so it has to be in the set (black)
-					result[x][y] = 0;
+					Launcher.resultsArray[x][y] = 0;
 				}else {
-					result[x][y] = test1(new Complex(real,imag));
+					BasicTest task = new BasicTest(new Complex(real,imag),limit,threshold,x,y);		//create BasicTest object 
+					
+					commonPool.submit(task);														//submits BasicTest to pool to be executed later
 				}
-				if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue((x*height)+y);}  //update progress bar
-			}
-			
+			}    	
 		}
-		return result;
+		while(!commonPool.isQuiescent()) {		//loop until all test have finished executing
+			if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height - commonPool.getQueuedSubmissionCount());}  //update progress bar
+		}
 	}
 	
 	//tests 3 and 4 are for high precision calculations

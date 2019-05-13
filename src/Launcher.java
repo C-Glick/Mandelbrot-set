@@ -3,13 +3,13 @@ import java.math.MathContext;
 
 public class Launcher {
 	static String title = "The MandelBrot Set";
-	static int width = 500;
+	static int width = 800;
 	static int height =500;
 	static KeyManager keyManager;
 	static MouseManager mouseManager;
 	static Tester tester;
 	static Display display;
-	static long [][] resultsArray;
+	static long [][] resultsArray = new long[width][height];
 	static Complex topLeft;
 	static Complex bottomRight;
 	boolean isUpdaterWorking;
@@ -67,8 +67,9 @@ public class Launcher {
 			topLeft = new Complex(center.getReal()-(width/(scale*512)),center.getImag()+(height/(scale*512)));					//Determine the complex numbers that correspond to the topLeft and bottom right pixels of the window
 			bottomRight = new Complex(center.getReal()+(width/(scale*512)),center.getImag()-(height/(scale*512)));				//scale is multiplied by 512 to give good initial size
 			
-			launcher.setResultsArray(tester.test2(topLeft, bottomRight, width, height));						//tell the tester object to run test #2 given the topLeft and bottomRight Complex numbers
+			//launcher.setResultsArray(tester.test2(topLeft, bottomRight, width, height));						//tell the tester object to run test #2 given the topLeft and bottomRight Complex numbers
 																												//then saves the results to resultsArray
+			tester.test2(topLeft, bottomRight, width, height);
 		}else { //high precision
 			BigDecimal correctedScale = scaleHP.multiply(new BigDecimal("512"));
 			
