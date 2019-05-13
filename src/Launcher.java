@@ -76,8 +76,8 @@ public class Launcher {
 			topLeftHP = new ComplexLong(centerHP.getReal().subtract(widthHP.divide(correctedScale,rMode),rMode),centerHP.getImag().add(heightHP.divide(correctedScale,rMode),rMode));
 			bottomRightHP = new ComplexLong (centerHP.getReal().add(widthHP.divide(correctedScale,rMode),rMode),centerHP.getImag().subtract(heightHP.divide(correctedScale,rMode),rMode));
 			
-			launcher.setResultsArray(tester.test4(topLeftHP, bottomRightHP, widthHP, heightHP));
-			
+			//launcher.setResultsArray(tester.test4(topLeftHP, bottomRightHP, widthHP, heightHP));
+			tester.test4(topLeftHP, bottomRightHP, widthHP, heightHP);
 		}
 	}
 	

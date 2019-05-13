@@ -16,6 +16,7 @@ public class Tester{
 	 * iteration limit is reached, and thus, is in the Mandelbrot set. 
 	 * @param c The complex number to test.
 	 * @return A long, telling the number of iterations taken to reach the threshold.
+	 * @deprecated use BasicTest class instead
 	 */
 	public int test1(Complex c) {										
 		Complex z = new Complex(0,0);
@@ -67,7 +68,7 @@ public class Tester{
 					//if true number is in bulb so it has to be in the set (black)
 					Launcher.resultsArray[x][y] = 0;
 				}else {
-					BasicTest task = new BasicTest(new Complex(real,imag),limit,threshold,x,y);		//create BasicTest object 
+					BasicTest task = new BasicTest(new Complex(real,imag),threshold,x,y);		//create BasicTest object 
 					
 					commonPool.submit(task);														//submits BasicTest to pool to be executed later
 				}
@@ -88,6 +89,7 @@ public class Tester{
 	 * @return A long telling the number of iterations taken to exceed the set threshold
 	 * 		   returns 0 if the number is in the set (does not exceed the threshold within the set limit).
 	 * @see test1
+	 * @deprecated use HPTest class instead
 	 */
 	public int test3(ComplexLong c) {
 		ComplexLong z = new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO);
@@ -117,12 +119,9 @@ public class Tester{
 	 * @return	A 2D array of longs showing the number of iterations taken.
 	 * @see test2
 	 */
-	public long[][] test4(ComplexLong topLeftHP, ComplexLong bottomRightHP, BigDecimal widthHP, BigDecimal heightHP){
+	public void test4(ComplexLong topLeftHP, ComplexLong bottomRightHP, BigDecimal widthHP, BigDecimal heightHP){
 		int width = widthHP.intValue();
-		int height = heightHP.intValue();
-		
-		long[][] result = new long[width][height];
-		
+		int height = heightHP.intValue();		
 		limit = Launcher.limit;
 		
 		if(!Launcher.firstBoot) {
@@ -134,9 +133,8 @@ public class Tester{
 		
 		//finds the complex numbers based on the pixel numbers
 		//then tests those numbers 
+		BigDecimal fourth = new BigDecimal("0.25");
 		for(int x=0; x<width; x++) {
-			BigDecimal fourth = new BigDecimal("0.25");
-			
 			BigDecimal real = ((bottomRightHP.getReal().subtract(topLeftHP.getReal(),rMode)).divide(widthHP,rMode))
 								.multiply(BigDecimal.valueOf(x),rMode).add(topLeftHP.getReal(),rMode);
 			
@@ -149,13 +147,15 @@ public class Tester{
 				BigDecimal q = (real.subtract(fourth)).pow(2).add(imag.pow(2));
 				if(q.multiply(q.add(real.subtract(fourth))).compareTo(fourth.multiply(imag.pow(2))) <=0 ) {
 					//if true number is in bulb so it has to be in the set (black)
-					result[x][y] = 0;
+					Launcher.resultsArray[x][y]= 0;
 				}else {
-					result[x][y] = test3(new ComplexLong(real,imag));
+					HPTest task = new HPTest(new ComplexLong(real,imag),thresholdHP,x,y);
+					commonPool.submit(task);
 				}
-				if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue((x*height)+y);}  //update progress bar
 			}
 		}
-		return result;
+		while(!commonPool.isQuiescent()) {
+			if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height - commonPool.getQueuedSubmissionCount());}  //update progress bar
+		}
 	}
 }
