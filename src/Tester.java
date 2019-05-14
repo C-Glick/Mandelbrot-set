@@ -51,6 +51,7 @@ public class Tester{
 			//set progress bar data
 			Launcher.display.progressBar.setMinimum(0);
 			Launcher.display.progressBar.setMaximum(width*height);
+			Launcher.display.progressBar.setValue(0);
 		}
 
 		
@@ -128,6 +129,8 @@ public class Tester{
 			//set progress bar data
 			Launcher.display.progressBar.setMinimum(0);
 			Launcher.display.progressBar.setMaximum(width*height);
+			Launcher.display.progressBar.setValue(0);
+
 		}
 		
 		

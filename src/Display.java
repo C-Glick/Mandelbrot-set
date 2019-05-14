@@ -11,6 +11,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -18,6 +19,8 @@ import java.awt.Insets;
 
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Component;
@@ -26,6 +29,11 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 //this class handles the display window that the game runs it
 public class Display extends Canvas{
 	String title;
@@ -34,6 +42,10 @@ public class Display extends Canvas{
 	Launcher launcher;
 	JFrame frame;
 	Graphics g;
+	
+	File userSaveFile;		//the file location with no numbering
+	File saveFile;			//the actual file output with numbering
+	int imageIndex=0;
 	
 	JPanel topBar;
 	JLabel scaleDisplay;
@@ -46,6 +58,10 @@ public class Display extends Canvas{
 	private JButton resetButton;
 	private JButton highPrecisionBtn;
 	private JButton lowPrecisionBtn;
+	private JMenuBar menuBar;
+	private JMenu mnFile;
+	private JMenuItem setSaveLocationBtn;
+	private JButton exportImageBtn;
 	
  
 	
@@ -71,6 +87,36 @@ public class Display extends Canvas{
 		frame = new JFrame(title);										//create the main window
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);			//exits the program when window is closed
 		frame.addKeyListener(launcher.getKeyManager());					//add key manager to main window
+		
+		JFileChooser saveLocChooser = new JFileChooser();
+		saveLocChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		saveLocChooser.setDialogTitle("Save Location");
+		saveLocChooser.setApproveButtonText("Select");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter ("PNG Images", "png");
+		saveLocChooser.setFileFilter(filter);
+		saveLocChooser.setSelectedFile(new File("image.png"));
+
+		
+		menuBar = new JMenuBar();
+		frame.setJMenuBar(menuBar);
+		
+		mnFile = new JMenu("File");
+		menuBar.add(mnFile);
+		
+		setSaveLocationBtn = new JMenuItem("Set Save Location");
+		setSaveLocationBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(saveLocChooser.showSaveDialog(frame)==0) {
+					userSaveFile = saveLocChooser.getSelectedFile();
+					saveFile = new File(userSaveFile.getParent() + "\\000_" + userSaveFile.getName());
+					imageIndex = 0;
+					exportImageBtn.setEnabled(true);
+					System.out.println("save path: " + saveFile.getAbsolutePath());
+					System.out.println("parent path: "+ saveFile.getParent());
+				}
+			}
+		});
+		mnFile.add(setSaveLocationBtn);
 		
 		topBar = new JPanel();										//create top  bar
 		GridBagLayout gbl_panel = new GridBagLayout();
@@ -99,7 +145,7 @@ public class Display extends Canvas{
 		gbc_centerXDisplay.gridy = 0;
 		centerXDisplay.setToolTipText("Center X value");
 		topBar.add(centerXDisplay, gbc_centerXDisplay);
-		
+			
 		
 		centerYDisplay = new JLabel("Y = " + Launcher.center.getImag());
 		centerYDisplay.setFont(font);
@@ -169,6 +215,21 @@ public class Display extends Canvas{
 		gbc_lowPrecisionBtn.gridx = 3;
 		gbc_lowPrecisionBtn.gridy = 0;
 		topBar.add(lowPrecisionBtn, gbc_lowPrecisionBtn);
+		
+		exportImageBtn = new JButton("Export Image");
+		exportImageBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				exportImage();
+			}
+		});
+		GridBagConstraints gbc_btnExportImage = new GridBagConstraints();
+		gbc_btnExportImage.anchor = GridBagConstraints.WEST;
+		gbc_btnExportImage.insets = new Insets(0, 0, 5, 0);
+		gbc_btnExportImage.gridx = 4;
+		gbc_btnExportImage.gridy = 0;
+		exportImageBtn.setEnabled(false);
+		exportImageBtn.setFocusable(false);
+		topBar.add(exportImageBtn, gbc_btnExportImage);
 
 		progressBar = new JProgressBar();
 		progressBar.setIndeterminate(false);
@@ -190,7 +251,7 @@ public class Display extends Canvas{
 		frame.getContentPane().add(canvas);
 		
 		
-		frame.pack();
+		//frame.pack();
 		frame.setVisible(true);
 		g = canvas.getGraphics();
 	}
@@ -236,11 +297,42 @@ public class Display extends Canvas{
 	    		   }								
 	    	   }
 	       }
-	       
+		 frameG.drawImage(Launcher.buffImag, 0, 0, null);
 	     
 	       //TODO: create grid display
 	       if(Launcher.enableGrid) {   
 	       }
-	       frameG.drawImage(Launcher.buffImag, 0, 0, null);
+	}
+	
+	private void exportImage() {
+		if(saveFile.exists()) {
+			imageIndex++;
+			 if (imageIndex<10) {	//images 0-9
+		    	   saveFile = new File(userSaveFile.getParent() + "\\00" + imageIndex + "_" + userSaveFile.getName());
+		       }else if(imageIndex>=10 && imageIndex<100) {  //images 10-99
+		    	   saveFile = new File(userSaveFile.getParent() + "\\0" + imageIndex + "_" + userSaveFile.getName());
+		       }else if(imageIndex>=100 && imageIndex<1000) {	//images 100-999
+		    	   saveFile = new File(userSaveFile.getParent() + "\\" + imageIndex + "_" + userSaveFile.getName());
+		       }
+			exportImage();
+			return;
+		}
+		
+	       try{
+	    	   ImageIO.write(Launcher.buffImag, "png", saveFile); 
+	       } 
+	       catch (IOException e){
+	    	   System.out.println(e);
+	    	   
+	       }       
+	       
+	       imageIndex++;
+	       if (imageIndex<10) {	//images 0-9
+	    	   saveFile = new File(userSaveFile.getParent() + "\\00" + imageIndex + "_" + userSaveFile.getName());
+	       }else if(imageIndex>=10 && imageIndex<100) {  //images 10-99
+	    	   saveFile = new File(userSaveFile.getParent() + "\\0" + imageIndex + "_" + userSaveFile.getName());
+	       }else if(imageIndex>=100 && imageIndex<1000) {	//images 100-999
+	    	   saveFile = new File(userSaveFile.getParent() + "\\" + imageIndex + "_" + userSaveFile.getName());
+	       }
 	}
 }
