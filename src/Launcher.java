@@ -1,3 +1,4 @@
+import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
@@ -14,6 +15,8 @@ public class Launcher {
 	static Complex bottomRight;
 	boolean isUpdaterWorking;
 	static boolean firstBoot = true;
+	
+	static BufferedImage buffImag = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	
 	
 	
