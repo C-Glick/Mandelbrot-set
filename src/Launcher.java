@@ -10,7 +10,7 @@ public class Launcher {
 	static MouseManager mouseManager;
 	static Tester tester;
 	static Display display;
-	static long [][] resultsArray = new long[width][height];
+	static int [][] resultsArray = new int[width][height];
 	static Complex topLeft;
 	static Complex bottomRight;
 	boolean isUpdaterWorking;
@@ -85,7 +85,7 @@ public class Launcher {
 	}
 	
 	
-	public void setResultsArray(long [][] input) {
+	public void setResultsArray(int [][] input) {
 		Launcher.resultsArray = input;
 	}
 	public void setScale(double input) {

@@ -15,6 +15,8 @@ import javax.swing.UnsupportedLookAndFeelException;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+
+import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -22,6 +24,8 @@ import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 //this class handles the display window that the game runs it
 public class Display extends Canvas{
 	String title;
@@ -220,21 +224,16 @@ public class Display extends Canvas{
 	 * @param g The graphics object used to draw to the canvas, comes from the display window.
 	 */
 	public void render(Graphics frameG) {				//this render method is called from the display class after the canvas is visible, or when repainting the canvas
-		Graphics buffImagG = Launcher.buffImag.getGraphics();
-		
-		
 		for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
 			for (int y=0;y<Launcher.height;y++) {
 	    		   
-	    		   long result = Launcher.resultsArray[x][y];				//get the result of the complex number at each pixel location
+	    		   int result = Launcher.resultsArray[x][y];				//get the result of the complex number at each pixel location
 	    		   if (result==0) {			//is in set
-	    			   buffImagG.setColor(Color.BLACK);
+		    		   Launcher.buffImag.setRGB(x, y, Color.BLACK.getRGB());
 	    		   }else { 
-		    		   buffImagG.setColor(Color.getHSBColor(((float)result/Launcher.limit), 1, 1));			//set the color with by creating a HSB color, set the hue to be the result(number of iterations to reach threshold) divided by the limit (max number of iterations), 
+		    		   //buffImagG.setColor(Color.getHSBColor(((float)result/Launcher.limit), 1, 1));			//set the color with by creating a HSB color, set the hue to be the result(number of iterations to reach threshold) divided by the limit (max number of iterations), 
+	    			   Launcher.buffImag.setRGB(x, y, Color.getHSBColor((float)result/Launcher.limit, 1, 1).getRGB());
 	    		   }								
-	    		   buffImagG.drawLine(x, y, x, y);				    		   //set the pixel at x,y to the color
-	    		   
-	    		   //TODO: is there a faster way to set pixel colors?
 	    	   }
 	       }
 	       
