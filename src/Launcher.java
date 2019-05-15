@@ -19,7 +19,6 @@ public class Launcher {
 	static BufferedImage buffImag = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	
 	
-	
 	static boolean enableGrid = false;
 	
 	static double threshold = 2;							//threshold for the test, stops once the value grows higher than this (default is 2)
