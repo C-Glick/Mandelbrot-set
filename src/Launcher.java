@@ -117,7 +117,6 @@ public class Launcher {
 										.multiply(new BigDecimal(y)).add(topLeftHP.getImag()));
 		
 		setCenterHP(complexLong);
-		
 	}
 	
 	public void setLimit (int input) {
