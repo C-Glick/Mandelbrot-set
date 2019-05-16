@@ -4,7 +4,7 @@ import java.math.MathContext;
 
 public class Launcher {
 	static String title = "The MandelBrot Set";
-	static int width = 800;
+	static int width = 500;
 	static int height =500;
 	static KeyManager keyManager;
 	static MouseManager mouseManager;
@@ -112,9 +112,9 @@ public class Launcher {
 	
 	public void setCenterHP (int x, int y) {		
 		ComplexLong complexLong = new ComplexLong(((bottomRightHP.getReal().subtract(topLeftHP.getReal())).divide(widthHP))
-									.multiply(topLeftHP.getReal().add(new BigDecimal(x))),
-								(((bottomRightHP.getImag().subtract(topLeftHP.getImag())).divide(heightHP))
-										.multiply(topLeftHP.getImag().add(new BigDecimal(y)))).negate());
+									.multiply(new BigDecimal(x)).add(topLeftHP.getReal()),
+								((bottomRightHP.getImag().subtract(topLeftHP.getImag())).divide(heightHP))
+										.multiply(new BigDecimal(y)).add(topLeftHP.getImag()));
 		
 		setCenterHP(complexLong);
 		
