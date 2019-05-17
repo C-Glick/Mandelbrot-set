@@ -81,6 +81,11 @@ public class Tester{
 		}
 		while(!commonPool.isQuiescent()) {		//loop until all test have finished executing
 			if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height - commonPool.getQueuedSubmissionCount());}  //update progress bar
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -172,6 +177,11 @@ public class Tester{
 			double timeEstimate = (((double) timeTaken / Launcher.display.progressBar.getPercentComplete()- timeTaken) / 1000);
 			double A = ((timeEstimate % 86400 ) % 3600 ) ;
 			Launcher.display.timeEstimateDisplay.setText((int) A/60  + ":" + (int) A%60);
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
