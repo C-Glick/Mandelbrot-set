@@ -60,6 +60,7 @@ public class Display extends Canvas{
 	private JMenuItem setSaveLocationBtn;
 	private JButton exportImageBtn;
 	private Choice resetChoice;
+	JLabel timeEstimateDisplay;
 	
  
 	
@@ -117,9 +118,9 @@ public class Display extends Canvas{
 		
 		topBar = new JPanel();										//create top  bar
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{120, 71, 65, 107, 103, 0};
+		gbl_panel.columnWidths = new int[]{120, 71, 65, 107, 103, 0, 0};
 		gbl_panel.rowHeights = new int[]{0, 21, 0};
-		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		topBar.setLayout(gbl_panel);
 		frame.getContentPane().add(topBar, BorderLayout.NORTH);
@@ -250,7 +251,7 @@ public class Display extends Canvas{
 		exportImageBtn.setToolTipText("Save the current graph as an image in the specified file location");
 		GridBagConstraints gbc_btnExportImage = new GridBagConstraints();
 		gbc_btnExportImage.anchor = GridBagConstraints.WEST;
-		gbc_btnExportImage.insets = new Insets(0, 0, 5, 0);
+		gbc_btnExportImage.insets = new Insets(0, 0, 5, 5);
 		gbc_btnExportImage.gridx = 4;
 		gbc_btnExportImage.gridy = 0;
 		exportImageBtn.setEnabled(false);
@@ -267,11 +268,22 @@ public class Display extends Canvas{
 		progressBar.setIndeterminate(false);
 		progressBar.setStringPainted(true);
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
+		gbc_progressBar.insets = new Insets(0, 0, 0, 5);
 		gbc_progressBar.fill = GridBagConstraints.VERTICAL;
 		gbc_progressBar.anchor = GridBagConstraints.WEST;
 		gbc_progressBar.gridx = 4;
 		gbc_progressBar.gridy = 1;
 		topBar.add(progressBar, gbc_progressBar);
+		
+		timeEstimateDisplay = new JLabel("");
+		GridBagConstraints gbc_timeEstimateDisplay = new GridBagConstraints();
+		gbc_timeEstimateDisplay.anchor = GridBagConstraints.WEST;
+		gbc_timeEstimateDisplay.gridx = 5;
+		gbc_timeEstimateDisplay.gridy = 1;
+		topBar.add(timeEstimateDisplay, gbc_timeEstimateDisplay);
+		timeEstimateDisplay.setToolTipText("Estimated amount of time remaining to finish the current calculation.");
+		
+		
 		
 		Canvas canvas = new Display(title,height,width,launcher);			//the canvas that will hold the buffered image
 		

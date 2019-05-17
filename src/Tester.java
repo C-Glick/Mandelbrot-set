@@ -1,5 +1,8 @@
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.time.Duration;
+import java.util.Date;
+import java.util.Timer;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
@@ -9,6 +12,7 @@ public class Tester{
 	int limit=Launcher.limit;		//number of iterations to run before stopping
 	MathContext rMode = ComplexLong.rMode;
 	ForkJoinPool commonPool = ForkJoinPool.commonPool();
+	Long startTime;
 	
 	
 	/**
@@ -121,6 +125,8 @@ public class Tester{
 	 * @see test2
 	 */
 	public void test4(ComplexLong topLeftHP, ComplexLong bottomRightHP, BigDecimal widthHP, BigDecimal heightHP){
+		startTime = System.currentTimeMillis();
+		
 		int width = widthHP.intValue();
 		int height = heightHP.intValue();		
 		limit = Launcher.limit;
@@ -158,7 +164,14 @@ public class Tester{
 			}
 		}
 		while(!commonPool.isQuiescent()) {
+			Long currentTime = System.currentTimeMillis();
+			Long timeTaken = currentTime - startTime;
 			if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height - commonPool.getQueuedSubmissionCount());}  //update progress bar
+			
+			//set time estimate (time taken / percent done) - time taken
+			double timeEstimate = (((double) timeTaken / Launcher.display.progressBar.getPercentComplete()- timeTaken) / 1000);
+			double A = ((timeEstimate % 86400 ) % 3600 ) ;
+			Launcher.display.timeEstimateDisplay.setText((int) A/60  + ":" + (int) A%60);
 		}
 	}
 }
