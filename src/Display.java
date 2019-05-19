@@ -40,6 +40,7 @@ public class Display extends Canvas{
 	JFrame frame;
 	Graphics canvasG;
 	
+	String OS = System.getProperty("os.name");
 	File userSaveFile;		//the file location with no numbering
 	File saveFile;			//the actual file output with numbering
 	int imageIndex=0;
@@ -92,7 +93,7 @@ public class Display extends Canvas{
 		saveLocChooser.setApproveButtonText("Select");												//set text on approve button
 		FileNameExtensionFilter filter = new FileNameExtensionFilter ("PNG Images", "png");			//create a file filter to only allow the user to see png files
 		saveLocChooser.setFileFilter(filter);														//apply that filter
-		saveLocChooser.setSelectedFile(new File("image.png"));										//set the suggested file name 
+		saveLocChooser.setSelectedFile(new File("image"));											//set the suggested file name 
 
 		menuBar = new JMenuBar();						//create menu bar at the top of the window
 		frame.setJMenuBar(menuBar);
@@ -106,8 +107,8 @@ public class Display extends Canvas{
 			public void actionPerformed(ActionEvent e) {
 				if(saveLocChooser.showOpenDialog(frame)==0) {				//open the file browser window, if it exits with a selected path continue
 					userSaveFile = saveLocChooser.getSelectedFile();		//set the userSaveFile to whatever the browser was, the userSaveFile does not have the numbers in the title
-					saveFile = new File(userSaveFile.getParent() + "\\000_" + userSaveFile.getName());			//set the actual saveFile file with 000_ before what ever the user named the file
 					imageIndex = 0;																				//set the image index back to 0
+					setSaveFile();
 					exportImageBtn.setEnabled(true);															//enable the export image button to be pressed
 					System.out.println("save path: " + saveFile.getAbsolutePath());
 					System.out.println("parent path: "+ saveFile.getParent());
@@ -356,35 +357,30 @@ public class Display extends Canvas{
 	 * export the image to the specified location
 	 */
 	private void exportImage() {
-		if(saveFile.exists()) {
-			imageIndex++;
-			 if (imageIndex<10) {	//images 0-9
-		    	   saveFile = new File(userSaveFile.getParent() + "\\00" + imageIndex + "_" + userSaveFile.getName());
-		       }else if(imageIndex>=10 && imageIndex<100) {  //images 10-99
-		    	   saveFile = new File(userSaveFile.getParent() + "\\0" + imageIndex + "_" + userSaveFile.getName());
-		       }else if(imageIndex>=100 && imageIndex<1000) {	//images 100-999
-		    	   saveFile = new File(userSaveFile.getParent() + "\\" + imageIndex + "_" + userSaveFile.getName());
-		       }
-			exportImage();
+		if(saveFile.exists()) {		//if that file already exists, increment the image index
+			imageIndex++;		//increment index
+			setSaveFile();		//update saveFile
+			exportImage();		//try exporting again
 			return;
 		}
-		
-	       try{
-	    	   ImageIO.write(Launcher.buffImag, "png", saveFile);		//save the image to the set location
-	       } 
-	       catch (IOException e){
-	    	   System.out.println(e);
-	    	   
-	       }       
-	       
-	       //update the saveFile for the next image to export
-	       imageIndex++;
-	       if (imageIndex<10) {	//images 0-9
-	    	   saveFile = new File(userSaveFile.getParent() + "\\00" + imageIndex + "_" + userSaveFile.getName());
-	       }else if(imageIndex>=10 && imageIndex<100) {  //images 10-99
-	    	   saveFile = new File(userSaveFile.getParent() + "\\0" + imageIndex + "_" + userSaveFile.getName());
-	       }else if(imageIndex>=100 && imageIndex<1000) {	//images 100-999
-	    	   saveFile = new File(userSaveFile.getParent() + "\\" + imageIndex + "_" + userSaveFile.getName());
-	       }
+		try{
+			ImageIO.write(Launcher.buffImag, "png", saveFile);		//save the image to the set location
+		} 
+		catch (IOException e){
+			System.out.println(e);   
+		} 
+		//update the saveFile for the next image to export
+		imageIndex++;		//increment index
+		setSaveFile();		//update saveFile	
+	}
+	
+	private void setSaveFile() {
+		if(OS.equals("Linux")) {
+			saveFile = new File(userSaveFile.getParent() + "/" + userSaveFile.getName() + "_" + String.format("%03d", imageIndex) + ".png");
+		} else if(OS.equals("Windows")) {
+			saveFile = new File(userSaveFile.getParent() + "\\" + userSaveFile.getName() + "_" + String.format("%03d", imageIndex) + ".png");
+		}else {
+			System.out.println("Unsupported OS: " + OS);
+		}
 	}
 }
