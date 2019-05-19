@@ -377,7 +377,7 @@ public class Display extends Canvas{
 	private void setSaveFile() {
 		if(OS.equals("Linux")) {
 			saveFile = new File(userSaveFile.getParent() + "/" + userSaveFile.getName() + "_" + String.format("%03d", imageIndex) + ".png");
-		} else if(OS.equals("Windows")) {
+		} else if(OS.equals("Windows 10")) {
 			saveFile = new File(userSaveFile.getParent() + "\\" + userSaveFile.getName() + "_" + String.format("%03d", imageIndex) + ".png");
 		}else {
 			System.out.println("Unsupported OS: " + OS);
