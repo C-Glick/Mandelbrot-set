@@ -8,6 +8,7 @@ import java.util.concurrent.RecursiveAction;
  * @see BasicTest
  */
 public class HPTest extends RecursiveAction{
+	static final double LOG_THRESHOLD = Math.log(Launcher.threshold);
 	
 	ComplexLong c;
 	int limit;
@@ -36,17 +37,34 @@ public class HPTest extends RecursiveAction{
 	
 	protected void compute() {
 		ComplexLong z = new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO);
-		int result= 0;
+		double result= 0;
+		int smoothingCount=0;
 		
 		for(int i=1; i<=limit; i++) {
 			z.sqr();
 			z.add(c);
 			BigDecimal value = z.abs();
 			if(value.compareTo(thresholdHP)>=0) {
-				result = i;
-				break;
+				if(smoothingCount>=2) {
+					result = smoothShading(i,value.doubleValue());
+					break;
+				}
+				smoothingCount++;
 			}
 		}
 		Launcher.resultsArray[x][y] = result;
+	}
+	/**
+	 * Calculates the number of iterations that a certain number should take to escape.
+	 * Rather than 4 iterations, the smoothing formula may return 4.642, giving
+	 * a more accurate result, therefore smoothing the graph out.
+	 * Still requires the number of iterations taken to escape.
+	 * @param i The number of iterations before Z >= threshold.
+	 * @param zMag The absolute value (or magnitude) of z
+	 * @return A double, the number of iterations it should for z take to escape the threshold
+	 */
+	private double smoothShading(int i, double zMag) {
+		double mu = i + 1 - Math.log(Math.log(zMag)) / LOG_THRESHOLD;
+		return mu;
 	}
 }

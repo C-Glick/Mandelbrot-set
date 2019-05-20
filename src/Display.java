@@ -337,7 +337,7 @@ public class Display extends Canvas{
 		for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
 			for (int y=0;y<Launcher.height;y++) {
 	    		   
-	    		   int result = Launcher.resultsArray[x][y];				//get the result of the complex number at each pixel location
+	    		   double result = Launcher.resultsArray[x][y];				//get the result of the complex number at each pixel location
 	    		   if (result==0) {			//is in set
 		    		   Launcher.buffImag.setRGB(x, y, Color.BLACK.getRGB());
 	    		   }else { 

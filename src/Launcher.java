@@ -4,13 +4,13 @@ import java.math.MathContext;
 
 public class Launcher {
 	static String title = "The MandelBrot Set";
-	static int width = 800;
+	static int width = 500;
 	static int height =500;
 	static KeyManager keyManager;
 	static MouseManager mouseManager;
 	static Tester tester;
 	static Display display;
-	static int [][] resultsArray = new int[width][height];
+	static double [][] resultsArray = new double[width][height];
 	static Complex topLeft;
 	static Complex bottomRight;
 	boolean isUpdaterWorking;
@@ -84,7 +84,7 @@ public class Launcher {
 	}
 	
 	
-	public void setResultsArray(int [][] input) {
+	public void setResultsArray(double [][] input) {
 		Launcher.resultsArray = input;
 	}
 	public void setScale(double input) {
