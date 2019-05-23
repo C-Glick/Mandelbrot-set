@@ -18,14 +18,19 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 
-import javax.imageio.ImageIO;
+import javax.imageio.*;
+import javax.imageio.stream.*;
+import javax.imageio.metadata.*;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.io.*;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Iterator;
 
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
@@ -365,6 +370,7 @@ public class Display extends Canvas{
 		}
 		try{
 			ImageIO.write(Launcher.buffImag, "png", saveFile);		//save the image to the set location
+			testMetadata(null);
 		} 
 		catch (IOException e){
 			System.out.println(e);   
@@ -381,6 +387,29 @@ public class Display extends Canvas{
 			saveFile = new File(userSaveFile.getParent() + "\\" + userSaveFile.getName() + "_" + String.format("%03d", imageIndex) + ".png");
 		}else {
 			System.out.println("Unsupported OS: " + OS);
+		}
+	}
+	
+	private void testMetadata(File input) {
+		try {
+			ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream("C:\\Users\\The Pheonix\\Desktop\\test save folder\\014_image.png"));
+			Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(iis);
+			while(imageReaders.hasNext()) {
+				ImageReader reader = (ImageReader) imageReaders.next();
+				reader.setInput(iis);
+				IIOMetadata metadata = reader.getImageMetadata(0);
+				System.out.println(metadata);
+				String[] names = metadata.getMetadataFormatNames();
+                for (int i = 0; i < names.length; i++) {
+                    System.out.println( "Format name: " + names[ i ] );
+                    
+                    displayMetadata(metadata.getAsTree(names[i]));
+                }
+				
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }
