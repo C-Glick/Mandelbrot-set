@@ -177,12 +177,15 @@ public class Tester{
 			//set time estimate (time taken / percent done) - time taken
 			double timeEstimate = (((double) timeTaken / Launcher.display.progressBar.getPercentComplete()- timeTaken) / 1000);
 			double A = ((timeEstimate % 86400 ) % 3600 ) ;
-			Launcher.display.timeEstimateDisplay.setText((int) A/60  + ":" + (int) A%60);
+			int min = (int) A / 60;
+			int sec = (int) A % 60;
+			Launcher.display.timeEstimateDisplay.setText(String.format("%02d", min)+":"+String.format("%02d", sec));
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
+		if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height);}	//set the progress bar to 100%
 	}
 }

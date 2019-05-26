@@ -31,12 +31,14 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Iterator;
 
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import java.awt.Choice;
+import javax.swing.JRadioButtonMenuItem;
 //this class handles the display window that the game runs it
 public class Display extends Canvas{
 	String title;
@@ -50,6 +52,7 @@ public class Display extends Canvas{
 	File userSaveFile;		//the file location with no numbering
 	File saveFile;			//the actual file output with numbering
 	int imageIndex=0;
+	File importImageFile;
 	
 	JPanel topBar;
 	JLabel scaleDisplay;
@@ -59,15 +62,19 @@ public class Display extends Canvas{
 	JProgressBar progressBar;
 	
 	Font font = new Font("Arial Unicode MS", Font.PLAIN, 14);
-	private JButton resetButton;
-	private JButton highPrecisionBtn;
-	private JButton lowPrecisionBtn;
+	private JMenuItem highPrecisionBtn;
+	private JMenuItem lowPrecisionBtn;
 	private JMenuBar menuBar;
 	private JMenu mnFile;
 	private JMenuItem setSaveLocationBtn;
-	private JButton exportImageBtn;
-	private Choice resetChoice;
+	private JMenuItem exportImageBtn;
 	JLabel timeEstimateDisplay;
+	private JMenu mnView;
+	private JMenu mnReset;
+	private JMenuItem mntmResetScaleOnly;
+	private JMenuItem mntmResetPositionOnly;
+	private JMenuItem mntmResetLimitOnly;
+	private JMenuItem mntmImportImage;
 	
  
 	
@@ -107,6 +114,8 @@ public class Display extends Canvas{
 		mnFile = new JMenu("File");						//add file menu to the menu bar
 		menuBar.add(mnFile);
 		
+		
+		
 		setSaveLocationBtn = new JMenuItem("Set Save Location");			//create button in the file menu to set the save location
 		setSaveLocationBtn.setToolTipText("Set the location and file name that images are saved to");
 		setSaveLocationBtn.addActionListener(new ActionListener() {			//what happens when the button is pressed
@@ -123,9 +132,35 @@ public class Display extends Canvas{
 		});
 		mnFile.add(setSaveLocationBtn);			//add the button to the file menu
 		
+		exportImageBtn = new JMenuItem("Export Image");						//button to export the current buffered image 
+		exportImageBtn.setToolTipText("Save the current graph as an image in the specified file location");
+		exportImageBtn.setEnabled(false);
+		exportImageBtn.setFocusable(false);
+		mnFile.add(exportImageBtn);
+		exportImageBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				exportImage();
+			}
+		});
+		
+		mntmImportImage = new JMenuItem("Import Image");
+		mntmImportImage.setToolTipText("Set the graph settings to match settings of imported image.");
+		mntmImportImage.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(saveLocChooser.showOpenDialog(frame)==0) {				//open the file browser window, if it exits with a selected path continue
+					importImageFile = saveLocChooser.getSelectedFile();
+					
+				}
+			}
+		});
+		mnFile.add(mntmImportImage);
+		
+		mnView = new JMenu("View");
+		menuBar.add(mnView);
+		
 		topBar = new JPanel();										//create top  bar
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{120, 71, 65, 107, 103, 0, 0};
+		gbl_panel.columnWidths = new int[]{79, 71, 158, 107, 103, 0, 0};
 		gbl_panel.rowHeights = new int[]{0, 21, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
@@ -150,53 +185,7 @@ public class Display extends Canvas{
 		gbc_centerXDisplay.gridx = 1;
 		gbc_centerXDisplay.gridy = 0;
 		centerXDisplay.setToolTipText("Center X value");
-		topBar.add(centerXDisplay, gbc_centerXDisplay);
-		
-		resetChoice = new Choice();												//choice drop down menu to select the resetMode
-		GridBagConstraints gbc_choice = new GridBagConstraints();
-		gbc_choice.insets = new Insets(0, 0, 0, 5);
-		gbc_choice.gridx = 2;
-		gbc_choice.gridy = 1;
-		topBar.add(resetChoice, gbc_choice);
-		resetChoice.add("Reset Scale Only");			//add all the choices to the resetChoice menu
-		resetChoice.add("Reset Limit Only");
-		resetChoice.add("Reset Position Only");
-		resetChoice.add("Reset All");
-		resetChoice.setFocusable(false);
-			
-		resetButton = new JButton("Reset");				//reset button, Reset some, or all settings of the graph, depends on the reset mode selected
-		resetButton.setFocusable(false);
-		resetButton.setToolTipText("Reset some, or all settings of the graph, depends on the reset mode selected");
-		GridBagConstraints gbc_resetButton = new GridBagConstraints();
-		gbc_resetButton.insets = new Insets(0, 0, 5, 5);
-		gbc_resetButton.gridx = 2;
-		gbc_resetButton.gridy = 0;
-		topBar.add(resetButton, gbc_resetButton);
-		resetButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				String resetMode = resetChoice.getSelectedItem();
-				
-				switch (resetMode) {				
-					case "Reset Scale Only":
-						launcher.setScale(1);
-						break;
-					case "Reset Limit Only":
-						launcher.setLimit(150);
-						break;
-					case "Reset Position Only":
-						launcher.setCenter(new Complex(0,0));
-						break;
-					case "Reset All":
-						launcher.setCenter(new Complex(0,0));
-						launcher.setScale(1);
-						launcher.setLimit(150);
-						break;
-					default:
-						System.out.println("RESET ERROR");
-				}				
-				launcher.refresh();
-			}
-		});
+		topBar.add(centerXDisplay, gbc_centerXDisplay);	
 		
 		centerYDisplay = new JLabel("Y = " + Launcher.center.getImag());			//JLabel to display the center y value
 		centerYDisplay.setFont(font);
@@ -217,14 +206,9 @@ public class Display extends Canvas{
 		gbc_limitDisplay.gridy = 1;
 		topBar.add(limitDisplay, gbc_limitDisplay);
 		
-		highPrecisionBtn = new JButton("High Precision");				//button to enable high precision mode
+		highPrecisionBtn = new JMenuItem("High Precision");				//button to enable high precision mode
 		highPrecisionBtn.setToolTipText("Use Java's BigDecimal class in order to generate a graph with much more precice values, allows for a larger scale factor but icreases computation time significantly");
 		highPrecisionBtn.setFocusable(false);
-		GridBagConstraints gbc_highPrecisionBtn = new GridBagConstraints();
-		gbc_highPrecisionBtn.insets = new Insets(0, 0, 0, 5);
-		gbc_highPrecisionBtn.gridx = 3;
-		gbc_highPrecisionBtn.gridy = 1;
-		topBar.add(highPrecisionBtn, gbc_highPrecisionBtn);
 		highPrecisionBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				lowPrecisionBtn.setEnabled(true);
@@ -234,16 +218,12 @@ public class Display extends Canvas{
 				launcher.refresh();
 			}
 		});
+		mnView.add(highPrecisionBtn);
 		
-		lowPrecisionBtn = new JButton("Low Precision");							//button to enable low precision mode
+		lowPrecisionBtn = new JMenuItem("Low Precision");							//button to enable low precision mode
 		lowPrecisionBtn.setToolTipText("Use 64 bit floating point numbers to calculate values, provides quick calculations. Good until 10^14");
 		lowPrecisionBtn.setFocusable(false);
 		lowPrecisionBtn.setEnabled(false);
-		GridBagConstraints gbc_lowPrecisionBtn = new GridBagConstraints();
-		gbc_lowPrecisionBtn.insets = new Insets(0, 0, 5, 5);
-		gbc_lowPrecisionBtn.gridx = 3;
-		gbc_lowPrecisionBtn.gridy = 0;
-		topBar.add(lowPrecisionBtn, gbc_lowPrecisionBtn);
 		lowPrecisionBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				lowPrecisionBtn.setEnabled(false);
@@ -253,39 +233,58 @@ public class Display extends Canvas{
 				launcher.refresh();
 			}
 		});
+		mnView.add(lowPrecisionBtn);
 		
-		exportImageBtn = new JButton("Export Image");						//button to export the current buffered image 
-		exportImageBtn.setToolTipText("Save the current graph as an image in the specified file location");
-		GridBagConstraints gbc_btnExportImage = new GridBagConstraints();
-		gbc_btnExportImage.anchor = GridBagConstraints.WEST;
-		gbc_btnExportImage.insets = new Insets(0, 0, 5, 5);
-		gbc_btnExportImage.gridx = 4;
-		gbc_btnExportImage.gridy = 0;
-		exportImageBtn.setEnabled(false);
-		exportImageBtn.setFocusable(false);
-		topBar.add(exportImageBtn, gbc_btnExportImage);
-		exportImageBtn.addActionListener(new ActionListener() {
+		mnReset = new JMenu("Reset");
+		mnView.add(mnReset);
+		
+		mntmResetScaleOnly = new JMenuItem("Reset scale only");
+		mntmResetScaleOnly.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				exportImage();
+				launcher.setScale(1);
+				launcher.refresh();
 			}
 		});
-
-		progressBar = new JProgressBar();				//progress bar to display 
-		progressBar.setToolTipText("Computational progress, does not include drawing image to the screen");
-		progressBar.setIndeterminate(false);
-		progressBar.setStringPainted(true);
-		GridBagConstraints gbc_progressBar = new GridBagConstraints();
-		gbc_progressBar.insets = new Insets(0, 0, 0, 5);
-		gbc_progressBar.fill = GridBagConstraints.VERTICAL;
-		gbc_progressBar.anchor = GridBagConstraints.WEST;
-		gbc_progressBar.gridx = 4;
-		gbc_progressBar.gridy = 1;
-		topBar.add(progressBar, gbc_progressBar);
+		mnReset.add(mntmResetScaleOnly);
+		
+		mntmResetPositionOnly = new JMenuItem("Reset position only");
+		mntmResetPositionOnly.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(launcher.highPrecision) {
+					launcher.setCenterHP(new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO));
+				}else {
+					launcher.setCenter(new Complex(0,0));
+				}
+				launcher.refresh();
+			}
+		});
+		mnReset.add(mntmResetPositionOnly);
+		
+		mntmResetLimitOnly = new JMenuItem("Reset limit only");
+		mntmResetLimitOnly.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				launcher.setLimit(150);
+				launcher.refresh();
+			}
+		});
+		mnReset.add(mntmResetLimitOnly);
+		
+				progressBar = new JProgressBar();				//progress bar to display 
+				progressBar.setToolTipText("Computational progress, does not include drawing image to the screen");
+				progressBar.setIndeterminate(false);
+				progressBar.setStringPainted(true);
+				GridBagConstraints gbc_progressBar = new GridBagConstraints();
+				gbc_progressBar.anchor = GridBagConstraints.EAST;
+				gbc_progressBar.insets = new Insets(0, 0, 0, 5);
+				gbc_progressBar.fill = GridBagConstraints.VERTICAL;
+				gbc_progressBar.gridx = 2;
+				gbc_progressBar.gridy = 1;
+				topBar.add(progressBar, gbc_progressBar);
 		
 		timeEstimateDisplay = new JLabel("");
 		GridBagConstraints gbc_timeEstimateDisplay = new GridBagConstraints();
 		gbc_timeEstimateDisplay.anchor = GridBagConstraints.WEST;
-		gbc_timeEstimateDisplay.gridx = 5;
+		gbc_timeEstimateDisplay.gridx = 3;
 		gbc_timeEstimateDisplay.gridy = 1;
 		topBar.add(timeEstimateDisplay, gbc_timeEstimateDisplay);
 		timeEstimateDisplay.setToolTipText("Estimated amount of time remaining to finish the current calculation.");
@@ -300,7 +299,7 @@ public class Display extends Canvas{
 		frame.getContentPane().add(canvas);
 		
 		
-		frame.pack();					//automatically set the width and height of the main frame window to fit everything
+		//frame.pack();					//automatically set the width and height of the main frame window to fit everything
 		frame.setVisible(true);			//make everything visible
 		canvasG = canvas.getGraphics();		//save the canvas's graphics object for later use when redrawing the canvas
 	}

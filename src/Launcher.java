@@ -95,6 +95,12 @@ public class Launcher {
 		Launcher.scaleHP = input;
 	}
 	
+	/**
+	 * Set center based on the X and Y values of the image *NOT the graph*
+	 * 0,0 is the upper right hand corner.
+	 * @param x the images x value to be the center
+	 * @param y the images y value to be the center
+	 */
 	public void setCenter(int x, int y) {
 		Complex complex = new Complex(((bottomRight.getReal()-topLeft.getReal())/width)*x+topLeft.getReal(),
 				(((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag()));
