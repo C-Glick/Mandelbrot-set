@@ -87,6 +87,7 @@ public class Tester{
 				e.printStackTrace();
 			}
 		}
+		if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height);}	//set the progress bar to 100%
 	}
 	
 	//tests 3 and 4 are for high precision calculations

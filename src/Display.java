@@ -3,7 +3,6 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -19,7 +18,6 @@ import org.w3c.dom.Node;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 
 import javax.imageio.*;
 import javax.imageio.stream.*;
@@ -28,17 +26,12 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.awt.image.IndexColorModel;
-import java.awt.image.Raster;
+
 import java.awt.event.ActionEvent;
-import java.io.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Locale;
 
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
@@ -318,8 +311,8 @@ public class Display extends Canvas{
 	public void updateUI() {
 		scaleDisplay.setText("Scale = " + launcher.getScale());
 		limitDisplay.setText("Limit = " + launcher.getLimit());
-		centerXDisplay.setText("X = "+launcher.center.real);
-		centerYDisplay.setText("Y = "+launcher.center.imag);
+		centerXDisplay.setText("X = "+Launcher.center.real);
+		centerYDisplay.setText("Y = "+Launcher.center.imag);
 		
 	}
 	
@@ -385,13 +378,13 @@ public class Display extends Canvas{
 		 * 		|
 		 * 		--->tEXtEntry
 		 * 		|	|
-		 * 		|	--->keyword = "center X" , "center Y", "scale", "limit", or "threshold"
+		 * 		|	--->keyword = "centerX" , "centerY", "scale", "limit", or "threshold"
 		 * 		|	|
 		 * 		|	--->value = some double converted to a string 
 		 *		|
 		 *		--->tEXtEntry
 		 *		.	|
-		 * 		.	--->keyword = "center X" , "center Y", "scale", "limit", or "threshold"
+		 * 		.	--->keyword = "centerX" , "centerY", "scale", "limit", or "threshold"
 		 * 		.	|
 		 * 			--->value = some double converted to a string 
 		 *			
@@ -406,44 +399,36 @@ public class Display extends Canvas{
 			return;
 		}
 		try{
-			ImageWriter writer = ImageIO.getImageWritersByFormatName("PNG").next();
+			ImageWriter writer = ImageIO.getImageWritersByFormatName("PNG").next();		//get the image writer for PNG images
 			
-			ImageOutputStream ios = ImageIO.createImageOutputStream(saveFile);
-			writer.setOutput(ios);
+			ImageOutputStream ios = ImageIO.createImageOutputStream(saveFile);			//create the output stream to the saveFile location
+			writer.setOutput(ios);														//set the writer to use the previously created output stream
 			
-			ImageWriteParam param = writer.getDefaultWriteParam();
-			ImageTypeSpecifier type = new ImageTypeSpecifier(Launcher.buffImag);
+			ImageWriteParam param = writer.getDefaultWriteParam();						//get the default parameters for the writer
+			ImageTypeSpecifier type = new ImageTypeSpecifier(Launcher.buffImag);		//get the image type from the buffered image
 			
-			IIOMetadata imgMetadata = writer.getDefaultImageMetadata(type, param);
+			IIOMetadata imgMetadata = writer.getDefaultImageMetadata(type, param);		//get the default metadata for that image type and writer parameters
 			
-			imgMetadata = upgradeMetadata(imgMetadata);
+			imgMetadata = upgradeMetadata(imgMetadata);									//upgrade the metadata to save the graph settings
 			
-			IIOImage iio_img = new IIOImage(Launcher.buffImag, null, imgMetadata);
-			writer.write(iio_img);
-			ios.flush();
+			IIOImage iio_img = new IIOImage(Launcher.buffImag, null, imgMetadata);		//create an IIOImage which encapsulates the buffered image, any thumbnails (not being used), and the appropriate metadata
+			writer.write(iio_img);														//save the IIOImage to disk
+			ios.flush();																//clean up and close down the output stream
 			ios.close();
-			
-			
-			
-			
-			
-			//ImageIO.write(Launcher.buffImag, "png", saveFile);		//save the image to the set location
-			//testMetadata(null);
-		
-		
-		
-		
-		
+					
 			//update the saveFile for the next image to export
 			imageIndex++;		//increment index
 			setSaveFile();		//update saveFile	
 		} 
 		catch (IOException e){
-			System.out.println(e);   
+			System.out.println("uh oh, image export faild :(" + e);   
 		} 
 		
 	}
 	
+	/**
+	 * set the save file location, based on the userSaveFile and the imageIndex.
+	 */
 	private void setSaveFile() {
 		if(OS.equals("Linux")) {
 			saveFile = new File(userSaveFile.getParent() + "/" + userSaveFile.getName() + "_" + String.format("%03d", imageIndex) + ".png");
@@ -454,33 +439,56 @@ public class Display extends Canvas{
 		}
 	}
 	
-	
+	/**
+	 * Upgrade the provided meta data to include the current graph settings
+	 * as text entries nodes under the text node.
+	 * @param src The root metadata
+	 * @return The upgraded metadata
+	 */
 	private IIOMetadata upgradeMetadata(IIOMetadata src) {		
-		String format = src.getNativeMetadataFormatName();
-		System.out.println("Native format: " + format);
-        Node root = src.getAsTree(format);
+		String format = src.getNativeMetadataFormatName();				//get the format of the source metadata
+		System.out.println("Native format: " + format);	
+        Node root = src.getAsTree(format);								//get the root node of the source metadata
 
         // add node
-        Node n = lookupChildNode(root, "tEXt");
-        if (n == null) {
+        Node n = lookupChildNode(root, "tEXt");							//look to see if the tEXt node already exists
+        if (n == null) {												//if not create it
         	System.out.println("Appending new node...");
-            Node textNode = setTextNode();
-            root.appendChild(textNode);
+            Node textNode = setTextNode();								//create the text node and add the graph data to its children
+            root.appendChild(textNode);									//append the text node to the root node
         }
 
         System.out.println("Upgraded metadata tree:");
 
         System.out.println("Merging metadata...");
-        try {
-        	//src.setFromTree(format, root);
-        	
-            src.mergeTree(format, root);
+        try {     	
+            src.mergeTree(format, root);								//merge the original metadata with the updated metadata
         } catch (IIOInvalidTreeException e) {
             throw new RuntimeException("Test FAILED!", e);
         }
-        return src;
+        return src;														//return the updated metadata
     }
 	
+	/**
+	 * Look to see if a certain node exists in a metadata tree.
+	 * @param root	The root location to start looking.
+	 * @param name	The name of the node.
+	 * @return The found node, null if node not found.
+	 */
+	private Node lookupChildNode(Node root, String name) {
+		Node n = root.getFirstChild();								//get the first child of the root node
+		while (n != null && !name.equals(n.getNodeName())) {		//if this child exists and is not the node we are looking for: 
+			n = n.getNextSibling();									//get the next child and run the test again
+        }
+        return n;													//return the found node
+    }
+	
+	/**
+	 * Sets the "tEXt" node of the metadata to reflect the graph's current
+	 * settings. Each value is saved as a "tEXtEntry" node with a corresponding
+	 * keyword and value.
+	 * @return The updated text node.
+	 */
 	private IIOMetadataNode setTextNode() {
 		//create text node (based on the required PNG metadata format)
 		IIOMetadataNode textNode = new IIOMetadataNode("tEXt");
@@ -515,14 +523,6 @@ public class Display extends Canvas{
         
         //return the now updated text node
         return textNode;
-    }
-
-	private Node lookupChildNode(Node root, String name) {
-		Node n = root.getFirstChild();
-		while (n != null && !name.equals(n.getNodeName())) {
-			n = n.getNextSibling();
-        }
-        return n;
     }
 	
 	private void testMetadata(File input) {
