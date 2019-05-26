@@ -13,6 +13,9 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -25,12 +28,17 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.IndexColorModel;
+import java.awt.image.Raster;
 import java.awt.event.ActionEvent;
 import java.io.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Locale;
 
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
@@ -362,6 +370,35 @@ public class Display extends Canvas{
 	 * export the image to the specified location
 	 */
 	private void exportImage() {
+		
+		/*
+		 * Metadata structure is as follows:
+		 * Root(src)
+		 * |
+		 * ---->javax_imageio_png_1.0
+		 * |
+		 * .
+		 * .
+		 * .
+		 * |
+		 * ---->tEXt
+		 * 		|
+		 * 		--->tEXtEntry
+		 * 		|	|
+		 * 		|	--->keyword = "center X" , "center Y", "scale", "limit", or "threshold"
+		 * 		|	|
+		 * 		|	--->value = some double converted to a string 
+		 *		|
+		 *		--->tEXtEntry
+		 *		.	|
+		 * 		.	--->keyword = "center X" , "center Y", "scale", "limit", or "threshold"
+		 * 		.	|
+		 * 			--->value = some double converted to a string 
+		 *			
+		 * there is a text entry node for each value of the graph,
+		 * create the tEXt node and all its children first, then merge it with the already existing (src) metadata 
+		 */
+		
 		if(saveFile.exists()) {		//if that file already exists, increment the image index
 			imageIndex++;		//increment index
 			setSaveFile();		//update saveFile
@@ -369,15 +406,42 @@ public class Display extends Canvas{
 			return;
 		}
 		try{
-			ImageIO.write(Launcher.buffImag, "png", saveFile);		//save the image to the set location
-			testMetadata(null);
+			ImageWriter writer = ImageIO.getImageWritersByFormatName("PNG").next();
+			
+			ImageOutputStream ios = ImageIO.createImageOutputStream(saveFile);
+			writer.setOutput(ios);
+			
+			ImageWriteParam param = writer.getDefaultWriteParam();
+			ImageTypeSpecifier type = new ImageTypeSpecifier(Launcher.buffImag);
+			
+			IIOMetadata imgMetadata = writer.getDefaultImageMetadata(type, param);
+			
+			imgMetadata = upgradeMetadata(imgMetadata);
+			
+			IIOImage iio_img = new IIOImage(Launcher.buffImag, null, imgMetadata);
+			writer.write(iio_img);
+			ios.flush();
+			ios.close();
+			
+			
+			
+			
+			
+			//ImageIO.write(Launcher.buffImag, "png", saveFile);		//save the image to the set location
+			//testMetadata(null);
+		
+		
+		
+		
+		
+			//update the saveFile for the next image to export
+			imageIndex++;		//increment index
+			setSaveFile();		//update saveFile	
 		} 
 		catch (IOException e){
 			System.out.println(e);   
 		} 
-		//update the saveFile for the next image to export
-		imageIndex++;		//increment index
-		setSaveFile();		//update saveFile	
+		
 	}
 	
 	private void setSaveFile() {
@@ -390,6 +454,77 @@ public class Display extends Canvas{
 		}
 	}
 	
+	
+	private IIOMetadata upgradeMetadata(IIOMetadata src) {		
+		String format = src.getNativeMetadataFormatName();
+		System.out.println("Native format: " + format);
+        Node root = src.getAsTree(format);
+
+        // add node
+        Node n = lookupChildNode(root, "tEXt");
+        if (n == null) {
+        	System.out.println("Appending new node...");
+            Node textNode = setTextNode();
+            root.appendChild(textNode);
+        }
+
+        System.out.println("Upgraded metadata tree:");
+
+        System.out.println("Merging metadata...");
+        try {
+        	//src.setFromTree(format, root);
+        	
+            src.mergeTree(format, root);
+        } catch (IIOInvalidTreeException e) {
+            throw new RuntimeException("Test FAILED!", e);
+        }
+        return src;
+    }
+	
+	private IIOMetadataNode setTextNode() {
+		//create text node (based on the required PNG metadata format)
+		IIOMetadataNode textNode = new IIOMetadataNode("tEXt");
+		
+		//create multiple text entry nodes named "tEXtEntry", each node holds a keyword (name) and a value
+		IIOMetadataNode centerXNode = new IIOMetadataNode("tEXtEntry");
+		centerXNode.setAttribute("keyword", "centerX");
+		centerXNode.setAttribute("value", Double.toString(Launcher.center.getReal()));
+		
+		IIOMetadataNode centerYNode = new IIOMetadataNode("tEXtEntry");
+		centerYNode.setAttribute("keyword", "centerY");
+    	centerYNode.setAttribute("value", Double.toString(Launcher.center.getImag()));
+    	
+		IIOMetadataNode scaleNode = new IIOMetadataNode("tEXtEntry");
+		scaleNode.setAttribute("keyword", "scale");
+		scaleNode.setAttribute("value", Double.toString(Launcher.scale));
+		
+		IIOMetadataNode limitNode = new IIOMetadataNode("tEXtEntry");
+		limitNode.setAttribute("keyword", "limit");
+		limitNode.setAttribute("value", Double.toString(Launcher.limit));
+		
+		IIOMetadataNode thresholdNode = new IIOMetadataNode("tEXtEntry");		
+		thresholdNode.setAttribute("keyword", "threshold");
+		thresholdNode.setAttribute("value", Double.toString(Launcher.threshold));
+		        
+        //append the all the data nodes to the textNode
+        textNode.appendChild(centerXNode);
+        textNode.appendChild(centerYNode);
+        textNode.appendChild(scaleNode);
+        textNode.appendChild(limitNode);
+        textNode.appendChild(thresholdNode);
+        
+        //return the now updated text node
+        return textNode;
+    }
+
+	private Node lookupChildNode(Node root, String name) {
+		Node n = root.getFirstChild();
+		while (n != null && !name.equals(n.getNodeName())) {
+			n = n.getNextSibling();
+        }
+        return n;
+    }
+	
 	private void testMetadata(File input) {
 		try {
 			ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream("C:\\Users\\The Pheonix\\Desktop\\test save folder\\014_image.png"));
@@ -398,18 +533,32 @@ public class Display extends Canvas{
 				ImageReader reader = (ImageReader) imageReaders.next();
 				reader.setInput(iis);
 				IIOMetadata metadata = reader.getImageMetadata(0);
-				System.out.println(metadata);
+				System.out.println("metadata: "+ metadata);
 				String[] names = metadata.getMetadataFormatNames();
                 for (int i = 0; i < names.length; i++) {
-                    System.out.println( "Format name: " + names[ i ] );
-                    
-                    displayMetadata(metadata.getAsTree(names[i]));
+                   // System.out.println( "Format name: " + names[ i ] );
+                    Node root = metadata.getAsTree(names[i]);
+                    int level = 0;
+                   
+                    NamedNodeMap map = root.getAttributes();
+                   for(int q = 0; i<map.getLength();i++) {
+                    	Node attr = map.item(q);
+                    	System.out.println(q+"name: "+attr.getNodeName()+" value: "+attr.getNodeValue());
+                    	
+                    	IIOMetadataNode testNode = new IIOMetadataNode();
+                    	testNode.setAttribute(q+"|test attribute name", q+"|test value");
+                    	
+                    	attr.insertBefore(testNode, attr);
+                    }
                 }
 				
 			}
+			//PNGImageWriteParam param = JPGImageWriteParam(Locale.getDefault());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+	
+	
 }
