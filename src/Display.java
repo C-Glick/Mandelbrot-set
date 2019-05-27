@@ -12,7 +12,6 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.awt.GridBagLayout;
@@ -22,14 +21,12 @@ import java.awt.Insets;
 import javax.imageio.*;
 import javax.imageio.stream.*;
 import javax.imageio.metadata.*;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Iterator;
@@ -37,8 +34,6 @@ import java.util.Iterator;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import java.awt.Choice;
-import javax.swing.JRadioButtonMenuItem;
 //this class handles the display window that the game runs it
 public class Display extends Canvas{
 	String title;
@@ -74,6 +69,7 @@ public class Display extends Canvas{
 	private JMenuItem mntmResetScaleOnly;
 	private JMenuItem mntmResetPositionOnly;
 	private JMenuItem mntmResetLimitOnly;
+	private JMenuItem mntmResetAll;
 	private JMenuItem mntmImportImage;
 	
  
@@ -100,6 +96,12 @@ public class Display extends Canvas{
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);			//exits the program when window is closed
 		frame.addKeyListener(launcher.getKeyManager());					//add key manager to main window
 		
+		menuBar = new JMenuBar();						//create menu bar at the top of the window
+		frame.setJMenuBar(menuBar);
+		
+		mnFile = new JMenu("File");						//add file menu to the menu bar
+		menuBar.add(mnFile);
+		
 		JFileChooser saveLocChooser = new JFileChooser();											//creates file chooser for exporting images
 		saveLocChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);					//allows user to view both files and directories when browsing
 		saveLocChooser.setDialogTitle("Save Location");												//set title of the bowser window
@@ -107,14 +109,6 @@ public class Display extends Canvas{
 		FileNameExtensionFilter filter = new FileNameExtensionFilter ("PNG Images", "png");			//create a file filter to only allow the user to see png files
 		saveLocChooser.setFileFilter(filter);														//apply that filter
 		saveLocChooser.setSelectedFile(new File("image"));											//set the suggested file name 
-
-		menuBar = new JMenuBar();						//create menu bar at the top of the window
-		frame.setJMenuBar(menuBar);
-		
-		mnFile = new JMenu("File");						//add file menu to the menu bar
-		menuBar.add(mnFile);
-		
-		
 		
 		setSaveLocationBtn = new JMenuItem("Set Save Location");			//create button in the file menu to set the save location
 		setSaveLocationBtn.setToolTipText("Set the location and file name that images are saved to");
@@ -143,13 +137,19 @@ public class Display extends Canvas{
 			}
 		});
 		
+		JFileChooser importLocChooser = new JFileChooser();
+		importLocChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);					//allows user to view both files and directories when browsing
+		importLocChooser.setDialogTitle("Import Image");												//set title of the bowser window
+		importLocChooser.setApproveButtonText("Open");												//set text on approve button
+		importLocChooser.setFileFilter(filter);
+		
 		mntmImportImage = new JMenuItem("Import Image");
-		mntmImportImage.setToolTipText("Set the graph settings to match settings of imported image.");
+		mntmImportImage.setToolTipText("Set the graph settings to match settings of the imported image.");
 		mntmImportImage.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(saveLocChooser.showOpenDialog(frame)==0) {				//open the file browser window, if it exits with a selected path continue
-					importImageFile = saveLocChooser.getSelectedFile();
-					
+				if(importLocChooser.showOpenDialog(frame)==0) {				//open the file browser window, if it exits with a selected path continue
+					importImageFile = importLocChooser.getSelectedFile();
+					importImage();
 				}
 			}
 		});
@@ -157,54 +157,6 @@ public class Display extends Canvas{
 		
 		mnView = new JMenu("View");
 		menuBar.add(mnView);
-		
-		topBar = new JPanel();										//create top  bar
-		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{79, 71, 158, 107, 103, 0, 0};
-		gbl_panel.rowHeights = new int[]{0, 21, 0};
-		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		topBar.setLayout(gbl_panel);
-		frame.getContentPane().add(topBar, BorderLayout.NORTH);
-		
-		scaleDisplay = new JLabel();											//create JLabel for displaying the current scale value
-		scaleDisplay.setText("Scale = "+launcher.getScale());					//set the text for the scale
-		scaleDisplay.setToolTipText("The current scaling factor of the graph");
-		scaleDisplay.setFont(font);
-		GridBagConstraints gbc_scale = new GridBagConstraints();
-		gbc_scale.anchor = GridBagConstraints.WEST;
-		gbc_scale.insets = new Insets(0, 0, 5, 5);
-		gbc_scale.gridx = 0;
-		gbc_scale.gridy = 0;
-		topBar.add(scaleDisplay, gbc_scale);
-		
-		centerXDisplay = new JLabel("X = " + Launcher.center.getReal());		//create JLabel for displaying the current x value
-		centerXDisplay.setFont(font);
-		GridBagConstraints gbc_centerXDisplay = new GridBagConstraints();
-		gbc_centerXDisplay.insets = new Insets(0, 0, 5, 5);
-		gbc_centerXDisplay.gridx = 1;
-		gbc_centerXDisplay.gridy = 0;
-		centerXDisplay.setToolTipText("Center X value");
-		topBar.add(centerXDisplay, gbc_centerXDisplay);	
-		
-		centerYDisplay = new JLabel("Y = " + Launcher.center.getImag());			//JLabel to display the center y value
-		centerYDisplay.setFont(font);
-		GridBagConstraints gbc_centerYDisplay = new GridBagConstraints();
-		gbc_centerYDisplay.insets = new Insets(0, 0, 0, 5);
-		gbc_centerYDisplay.gridx = 1;
-		gbc_centerYDisplay.gridy = 1;
-		centerYDisplay.setToolTipText("Center Y value");
-		topBar.add(centerYDisplay, gbc_centerYDisplay);
-		
-		limitDisplay = new JLabel("Limit = " + launcher.getLimit());				//JLabel to display the current limit value
-		limitDisplay.setFont(font);
-		limitDisplay.setToolTipText("The current maximum number of iterations allowed");
-		GridBagConstraints gbc_limitDisplay= new GridBagConstraints();
-		gbc_limitDisplay.anchor = GridBagConstraints.WEST;
-		gbc_limitDisplay.insets = new Insets(0, 0, 0, 5);
-		gbc_limitDisplay.gridx = 0;
-		gbc_limitDisplay.gridy = 1;
-		topBar.add(limitDisplay, gbc_limitDisplay);
 		
 		highPrecisionBtn = new JMenuItem("High Precision");				//button to enable high precision mode
 		highPrecisionBtn.setToolTipText("Use Java's BigDecimal class in order to generate a graph with much more precice values, allows for a larger scale factor but icreases computation time significantly");
@@ -269,37 +221,100 @@ public class Display extends Canvas{
 		});
 		mnReset.add(mntmResetLimitOnly);
 		
-				progressBar = new JProgressBar();				//progress bar to display 
-				progressBar.setToolTipText("Computational progress, does not include drawing image to the screen");
-				progressBar.setIndeterminate(false);
-				progressBar.setStringPainted(true);
-				GridBagConstraints gbc_progressBar = new GridBagConstraints();
-				gbc_progressBar.anchor = GridBagConstraints.EAST;
-				gbc_progressBar.insets = new Insets(0, 0, 0, 5);
-				gbc_progressBar.fill = GridBagConstraints.VERTICAL;
-				gbc_progressBar.gridx = 2;
-				gbc_progressBar.gridy = 1;
-				topBar.add(progressBar, gbc_progressBar);
+		mntmResetAll = new JMenuItem("Reset all");
+		mntmResetAll.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				launcher.setScale(1);
+				if(launcher.highPrecision) {
+					launcher.setCenterHP(new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO));
+				}else {
+					launcher.setCenter(new Complex(0,0));
+				}
+				launcher.setLimit(150);
+				launcher.refresh();
+			}
+		});
+		mnReset.add(mntmResetAll);
+		
+		topBar = new JPanel();										//create top  bar
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{79, 68, 157, 47, 68, 0};
+		gbl_panel.rowHeights = new int[]{0, 21, 0};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		topBar.setLayout(gbl_panel);
+		frame.getContentPane().add(topBar, BorderLayout.NORTH);
+		
+		scaleDisplay = new JLabel();											//create JLabel for displaying the current scale value
+		scaleDisplay.setText("Scale = "+launcher.getScale());					//set the text for the scale
+		scaleDisplay.setToolTipText("The current scaling factor of the graph");
+		scaleDisplay.setFont(font);
+		GridBagConstraints gbc_scale = new GridBagConstraints();
+		gbc_scale.anchor = GridBagConstraints.WEST;
+		gbc_scale.insets = new Insets(0, 0, 5, 5);
+		gbc_scale.gridx = 0;
+		gbc_scale.gridy = 0;
+		topBar.add(scaleDisplay, gbc_scale);
+		
+		centerXDisplay = new JLabel("X = " + Launcher.center.getReal());		//create JLabel for displaying the current x value
+		centerXDisplay.setFont(font);
+		GridBagConstraints gbc_centerXDisplay = new GridBagConstraints();
+		gbc_centerXDisplay.anchor = GridBagConstraints.WEST;
+		gbc_centerXDisplay.insets = new Insets(0, 0, 5, 5);
+		gbc_centerXDisplay.gridx = 1;
+		gbc_centerXDisplay.gridy = 0;
+		centerXDisplay.setToolTipText("Center X value");
+		topBar.add(centerXDisplay, gbc_centerXDisplay);	
+		
+		centerYDisplay = new JLabel("Y = " + Launcher.center.getImag());			//JLabel to display the center y value
+		centerYDisplay.setFont(font);
+		GridBagConstraints gbc_centerYDisplay = new GridBagConstraints();
+		gbc_centerYDisplay.anchor = GridBagConstraints.WEST;
+		gbc_centerYDisplay.insets = new Insets(0, 0, 0, 5);
+		gbc_centerYDisplay.gridx = 1;
+		gbc_centerYDisplay.gridy = 1;
+		centerYDisplay.setToolTipText("Center Y value");
+		topBar.add(centerYDisplay, gbc_centerYDisplay);
+		
+		limitDisplay = new JLabel("Limit = " + launcher.getLimit());				//JLabel to display the current limit value
+		limitDisplay.setFont(font);
+		limitDisplay.setToolTipText("The current maximum number of iterations allowed");
+		GridBagConstraints gbc_limitDisplay= new GridBagConstraints();
+		gbc_limitDisplay.anchor = GridBagConstraints.WEST;
+		gbc_limitDisplay.insets = new Insets(0, 0, 0, 5);
+		gbc_limitDisplay.gridx = 0;
+		gbc_limitDisplay.gridy = 1;
+		topBar.add(limitDisplay, gbc_limitDisplay);
+		
+		progressBar = new JProgressBar();				//progress bar to display 
+		progressBar.setToolTipText("Computational progress, does not include drawing image to the screen");
+		progressBar.setIndeterminate(false);
+		progressBar.setStringPainted(true);
+		GridBagConstraints gbc_progressBar = new GridBagConstraints();
+		gbc_progressBar.anchor = GridBagConstraints.WEST;
+		gbc_progressBar.insets = new Insets(0, 0, 0, 5);
+		gbc_progressBar.fill = GridBagConstraints.VERTICAL;
+		gbc_progressBar.gridx = 2;
+		gbc_progressBar.gridy = 1;
+		topBar.add(progressBar, gbc_progressBar);
 		
 		timeEstimateDisplay = new JLabel("");
 		GridBagConstraints gbc_timeEstimateDisplay = new GridBagConstraints();
+		gbc_timeEstimateDisplay.insets = new Insets(0, 0, 0, 5);
 		gbc_timeEstimateDisplay.anchor = GridBagConstraints.WEST;
 		gbc_timeEstimateDisplay.gridx = 3;
 		gbc_timeEstimateDisplay.gridy = 1;
 		topBar.add(timeEstimateDisplay, gbc_timeEstimateDisplay);
 		timeEstimateDisplay.setToolTipText("Estimated amount of time remaining to finish the current calculation.");
 		
-		
-		
 		Canvas canvas = new Display(title,height,width,launcher);			//the canvas that will hold the buffered image
-		
 		canvas.setSize(width, height);		//set the canvas width and height
 		canvas.setFocusable(false);
 		canvas.addMouseListener(launcher.getMouseManager());
 		frame.getContentPane().add(canvas);
 		
 		
-		//frame.pack();					//automatically set the width and height of the main frame window to fit everything
+		frame.pack();					//automatically set the width and height of the main frame window to fit everything
 		frame.setVisible(true);			//make everything visible
 		canvasG = canvas.getGraphics();		//save the canvas's graphics object for later use when redrawing the canvas
 	}
@@ -524,40 +539,59 @@ public class Display extends Canvas{
         return textNode;
     }
 	
-	private void testMetadata(File input) {
+	/**
+	 * Read the importImageFile's metadata and set the current graph to reflect
+	 * those settings.
+	 */
+	private void importImage() {
+		Double tempX=null;			//temporary center x and y values
+		Double tempY=null;
+		
 		try {
-			ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream("C:\\Users\\The Pheonix\\Desktop\\test save folder\\014_image.png"));
-			Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(iis);
-			while(imageReaders.hasNext()) {
-				ImageReader reader = (ImageReader) imageReaders.next();
-				reader.setInput(iis);
-				IIOMetadata metadata = reader.getImageMetadata(0);
-				System.out.println("metadata: "+ metadata);
-				String[] names = metadata.getMetadataFormatNames();
-                for (int i = 0; i < names.length; i++) {
-                   // System.out.println( "Format name: " + names[ i ] );
-                    Node root = metadata.getAsTree(names[i]);
-                    int level = 0;
-                   
-                    NamedNodeMap map = root.getAttributes();
-                   for(int q = 0; i<map.getLength();i++) {
-                    	Node attr = map.item(q);
-                    	System.out.println(q+"name: "+attr.getNodeName()+" value: "+attr.getNodeValue());
-                    	
-                    	IIOMetadataNode testNode = new IIOMetadataNode();
-                    	testNode.setAttribute(q+"|test attribute name", q+"|test value");
-                    	
-                    	attr.insertBefore(testNode, attr);
-                    }
-                }
+			ImageInputStream iis = ImageIO.createImageInputStream(importImageFile);			//image input stream to read the file
+			Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(iis);				//get a list of readers from the input stream
+			ImageReader reader = imageReaders.next();										//get the first reader from the stream
+			reader.setInput(iis);															//set the input of the reader to the input stream
+			IIOMetadata metadata = reader.getImageMetadata(0);								//get the metadata of the image from the reader
+			Node root = metadata.getAsTree(metadata.getNativeMetadataFormatName());			//the the metadata in node format 
+			Node textNode = lookupChildNode(root, "tEXt");									//the the text node of the metadata
+			IIOMetadataNode n = (IIOMetadataNode) textNode.getFirstChild();					//get the first child of the text node
+			while(n!=null) {																//while there the child exists:
+				String keyword = n.getAttribute("keyword");									//get the value of the keyword attribute
+				double value = Double.parseDouble(n.getAttribute("value"));					//get the value of the value attribute
+				System.out.println(keyword +"= "+value);
 				
+				switch (keyword) {															//set the current graph settings based on the node's keyword and value
+				case "centerX":
+					if(tempY!=null) {
+						launcher.setCenter(new Complex(value,tempY));
+					}else {tempX=value;}
+					break;
+				case "centerY":
+					if(tempX!=null) {
+						launcher.setCenter(new Complex(tempX,value));
+					}else {tempY=value;}
+					break;
+				case "scale":
+					launcher.setScale(value);
+					break;
+				case "limit":
+					launcher.setLimit((int)value);
+					break;
+				case "threshold":
+					//TODO: create, setThreshold method in launcher class
+					break;
+				default:
+					System.out.println("ERROR: unknown attribute: "+keyword+"= "+value);
+				}
+				n= (IIOMetadataNode) n.getNextSibling();								//get the next sibling under the text node
 			}
-			//PNGImageWriteParam param = JPGImageWriteParam(Locale.getDefault());
+			iis.flush();				//clean up the input stream
+			iis.close();
+			launcher.refresh();			//refresh/update the graph
+			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("ERROR: import image could not be found" + e);
 		}
 	}
-	
-	
 }
