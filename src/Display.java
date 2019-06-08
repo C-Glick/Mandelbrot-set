@@ -34,6 +34,7 @@ import java.util.Iterator;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 //this class handles the display window that the game runs it
 public class Display extends Canvas{
 	String title;
@@ -85,6 +86,7 @@ public class Display extends Canvas{
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
 				| UnsupportedLookAndFeelException e) {
 			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Error, look and feel not supported: " + e);
 		}
 	}
 	
@@ -125,7 +127,6 @@ public class Display extends Canvas{
 			}
 		});
 		mnFile.add(setSaveLocationBtn);			//add the button to the file menu
-		
 		exportImageBtn = new JMenuItem("Export Image");						//button to export the current buffered image 
 		exportImageBtn.setToolTipText("Save the current graph as an image in the specified file location");
 		exportImageBtn.setEnabled(false);
@@ -435,7 +436,9 @@ public class Display extends Canvas{
 			setSaveFile();		//update saveFile	
 		} 
 		catch (IOException e){
-			System.out.println("uh oh, image export faild :(" + e);   
+			System.out.println("Error, image failed to export: " + e);
+			JOptionPane.showMessageDialog(null, "Error, image failed to export: " + e);
+
 		} 
 		
 	}
@@ -450,6 +453,7 @@ public class Display extends Canvas{
 			saveFile = new File(userSaveFile.getParent() + "\\" + userSaveFile.getName() + "_" + String.format("%03d", imageIndex) + ".png");
 		}else {
 			System.out.println("Unsupported OS: " + OS);
+			JOptionPane.showMessageDialog(null, "Error, OS(" + OS + ") not supported for file exportion.");
 		}
 	}
 	
@@ -478,7 +482,7 @@ public class Display extends Canvas{
         try {     	
             src.mergeTree(format, root);								//merge the original metadata with the updated metadata
         } catch (IIOInvalidTreeException e) {
-            throw new RuntimeException("Test FAILED!", e);
+            JOptionPane.showMessageDialog(null, "Error, could not merge previous metadata tree with updated tree: "+ e);
         }
         return src;														//return the updated metadata
     }
@@ -583,6 +587,7 @@ public class Display extends Canvas{
 					break;
 				default:
 					System.out.println("ERROR: unknown attribute: "+keyword+"= "+value);
+					JOptionPane.showMessageDialog(null, "Error importing image, unknown attribute: "+ keyword + "= "+value );
 				}
 				n= (IIOMetadataNode) n.getNextSibling();								//get the next sibling under the text node
 			}
@@ -592,6 +597,7 @@ public class Display extends Canvas{
 			
 		} catch (IOException e) {
 			System.out.println("ERROR: import image could not be found" + e);
+			JOptionPane.showMessageDialog(null, "Error, import image could not be found" +e);
 		}
 	}
 }

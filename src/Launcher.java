@@ -3,6 +3,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 
 public class Launcher {
+	static GlobalHandler globalExceptionHandler = new GlobalHandler();
 	static String title = "The MandelBrot Set";
 	static int width = 800;
 	static int height =400;
@@ -38,6 +39,7 @@ public class Launcher {
 	
 	
 	public static void main(String[] args) {
+		Thread.setDefaultUncaughtExceptionHandler(globalExceptionHandler);
 	
 		Launcher launcher = new Launcher();							//creates a new launcher object
 		tester = new Tester();										//creates a new tester
