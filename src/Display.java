@@ -24,7 +24,7 @@ import javax.imageio.metadata.*;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
-
+import java.awt.image.BufferedImage;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +42,7 @@ public class Display extends Canvas{
 	int height;
 	Launcher launcher;
 	JFrame frame;
+	Canvas canvas;
 	Graphics canvasG;
 	
 	String OS = System.getProperty("os.name");
@@ -72,6 +73,15 @@ public class Display extends Canvas{
 	private JMenuItem mntmResetLimitOnly;
 	private JMenuItem mntmResetAll;
 	private JMenuItem mntmImportImage;
+	private JMenu mnSetResolution;
+	private JMenuItem mntmx;
+	private JMenuItem mntmx_1;
+	private JMenuItem mntmx_2;
+	private JMenuItem mntmx_3;
+	private JMenuItem mntmx_4;
+	private JMenuItem mntmx_5;
+	private JMenuItem mntmx_6;
+	private JMenuItem mntmx_7;
 	
  
 	
@@ -97,6 +107,7 @@ public class Display extends Canvas{
 		frame = new JFrame(title);										//create the main window
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);			//exits the program when window is closed
 		frame.addKeyListener(launcher.getKeyManager());					//add key manager to main window
+		frame.setBackground(Color.BLACK);
 		
 		menuBar = new JMenuBar();						//create menu bar at the top of the window
 		frame.setJMenuBar(menuBar);
@@ -237,6 +248,85 @@ public class Display extends Canvas{
 		});
 		mnReset.add(mntmResetAll);
 		
+		mnSetResolution = new JMenu("Set Resolution");
+		mnView.add(mnSetResolution);
+		mnSetResolution.setToolTipText("Set the resolution of the graph.");
+		
+		mntmx = new JMenuItem("256 x 144");
+		mntmx.setToolTipText("114p");
+		mnSetResolution.add(mntmx);
+		mntmx.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(256,144);
+			}
+		});
+		
+		
+		mntmx_1 = new JMenuItem("426 x 240");
+		mntmx_1.setToolTipText("240p");
+		mnSetResolution.add(mntmx_1);
+		mntmx_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(426,240);
+			}
+		});
+		
+		mntmx_2 = new JMenuItem("640 x 360");
+		mntmx_2.setToolTipText("360p");
+		mnSetResolution.add(mntmx_2);
+		mntmx_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(640,360);
+			}
+		});
+		
+		mntmx_3 = new JMenuItem("854 x 480");
+		mntmx_3.setToolTipText("480p");
+		mnSetResolution.add(mntmx_3);
+		mntmx_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(854,480);
+			}
+		});
+		
+		mntmx_4 = new JMenuItem("1280 x 720");
+		mntmx_4.setToolTipText("720p");
+		mnSetResolution.add(mntmx_4);
+		mntmx_4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(1280,720);
+			}
+		});
+		
+		mntmx_5 = new JMenuItem("1920 x 1080");
+		mntmx_5.setToolTipText("1080p");
+		mnSetResolution.add(mntmx_5);
+		mntmx_5.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(1920,1080);
+			}
+		});
+		
+		mntmx_6 = new JMenuItem("2560 x 1440");
+		mntmx_6.setToolTipText("1440p");
+		mnSetResolution.add(mntmx_6);
+		mntmx_6.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(2560,1440);
+			}
+		});
+		
+		mntmx_7 = new JMenuItem("3840 x 2160");
+		mntmx_7.setToolTipText("4k");
+		mnSetResolution.add(mntmx_7);
+		mntmx_7.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(3840,2160);
+			}
+		});
+		
+		
+		
 		topBar = new JPanel();										//create top  bar
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{79, 68, 157, 47, 68, 0};
@@ -308,10 +398,11 @@ public class Display extends Canvas{
 		topBar.add(timeEstimateDisplay, gbc_timeEstimateDisplay);
 		timeEstimateDisplay.setToolTipText("Estimated amount of time remaining to finish the current calculation.");
 		
-		Canvas canvas = new Display(title,height,width,launcher);			//the canvas that will hold the buffered image
+		canvas = new Display(title,height,width,launcher);			//the canvas that will hold the buffered image
 		canvas.setSize(width, height);		//set the canvas width and height
 		canvas.setFocusable(false);
 		canvas.addMouseListener(launcher.getMouseManager());
+		canvas.setBackground(Color.BLACK);
 		frame.getContentPane().add(canvas);
 		
 		
@@ -372,6 +463,29 @@ public class Display extends Canvas{
 	       //TODO: create grid display
 	       if(Launcher.enableGrid) {   
 	       }
+	}
+	
+	public void resizeGraph(int newX, int newY) {
+		//clear graph
+		for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
+			for (int y=0;y<Launcher.height;y++) {
+		    		   Launcher.resultsArray[x][y] = 0;
+		   }								
+		}
+		repaint();
+		Launcher.width = newX;
+		Launcher.height = newY;
+		Launcher.resultsArray = new double[newX][newY];
+		Launcher.buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
+		
+		canvas.setSize(newX, newY);
+		frame.pack();
+		if(frame.getWidth()>newX) {
+			frame.setSize(newX+15, newY+topBar.getHeight()+menuBar.getHeight()+38);
+		}
+		launcher.refresh();
+	
+	
 	}
 	
 	/**
