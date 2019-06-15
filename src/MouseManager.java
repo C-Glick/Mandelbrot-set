@@ -35,6 +35,7 @@ public class MouseManager implements MouseListener{
 
 	@Override
 	public void mousePressed(MouseEvent event) {
+		System.out.println("mouse pressed");
 		// TODO Auto-generated method stub
 		
 	}

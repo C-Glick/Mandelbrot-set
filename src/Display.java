@@ -1,6 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
 
@@ -8,6 +9,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -24,6 +26,8 @@ import javax.imageio.metadata.*;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -42,6 +46,8 @@ public class Display extends Canvas{
 	int height;
 	Launcher launcher;
 	JFrame frame;
+	private Timer resizeTimer;
+	boolean autoResize=true;
 	Canvas canvas;
 	Graphics canvasG;
 	
@@ -106,8 +112,27 @@ public class Display extends Canvas{
 	public void start() {
 		frame = new JFrame(title);										//create the main window
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);			//exits the program when window is closed
-		frame.addKeyListener(launcher.getKeyManager());					//add key manager to main window
 		frame.setBackground(Color.BLACK);
+		frame.addKeyListener(launcher.getKeyManager());					//add key manager to main window
+		frame.addComponentListener(new ComponentAdapter() {
+		    public void componentResized(ComponentEvent componentEvent) {
+		    	if(!autoResize) {		//prevents resize loop when using set resolutions
+		    		resizeTimer.restart();
+		    	}else {
+		    		autoResize=false;	//when and auto resize causes this function, set autoResize to false to allow for manual resizing in the future
+		    	}
+		    }
+		});
+		
+		resizeTimer = new Timer(300, new ActionListener() {
+    	    public void actionPerformed(ActionEvent evt) {
+    	        System.out.println("resize");
+ 		       	manualResizeGraph();
+
+    	    }
+    	});
+    	resizeTimer.setRepeats(false);
+		
 		
 		menuBar = new JMenuBar();						//create menu bar at the top of the window
 		frame.setJMenuBar(menuBar);
@@ -427,6 +452,7 @@ public class Display extends Canvas{
 	 */
 	 public void paint(Graphics g) {
 		 launcher.getDisplay().render(g);
+		 
 	 }
 	 /**
 	  * custom repaint method
@@ -467,25 +493,45 @@ public class Display extends Canvas{
 	
 	public void resizeGraph(int newX, int newY) {
 		//clear graph
+		autoResize = true;		//stop the resize action listener from taking action
 		for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
 			for (int y=0;y<Launcher.height;y++) {
 		    		   Launcher.resultsArray[x][y] = 0;
 		   }								
 		}
-		repaint();
+		
 		Launcher.width = newX;
 		Launcher.height = newY;
 		Launcher.resultsArray = new double[newX][newY];
 		Launcher.buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 		
-		canvas.setSize(newX, newY);
-		frame.pack();
+		canvas.setSize(newX, newY);		
+		//if shrinking, force frame to fit the canvas rather than the GUI
 		if(frame.getWidth()>newX) {
 			frame.setSize(newX+15, newY+topBar.getHeight()+menuBar.getHeight()+38);
+		}else {
+			frame.pack();
 		}
+		
 		launcher.refresh();
+	}
 	
-	
+	private void manualResizeGraph () {
+		//clear graph
+		for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
+			for (int y=0;y<Launcher.height;y++) {
+		    		   Launcher.resultsArray[x][y] = 0;
+		   }								
+		}
+		
+		int newX = canvas.getWidth();
+		int newY = canvas.getHeight();
+		Launcher.width = newX;
+		Launcher.height = newY;
+		Launcher.resultsArray = new double[newX][newY];
+		Launcher.buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
+		
+		launcher.refresh();
 	}
 	
 	/**
