@@ -51,6 +51,10 @@ public class Display extends Canvas{
 	Canvas canvas;
 	Graphics canvasG;
 	
+	Gradient gradient;
+	double colorOffset;
+	ColorCycle colorCycle;
+	
 	String OS = System.getProperty("os.name");
 	File userSaveFile;		//the file location with no numbering
 	File saveFile;			//the actual file output with numbering
@@ -88,6 +92,10 @@ public class Display extends Canvas{
 	private JMenuItem mntmx_5;
 	private JMenuItem mntmx_6;
 	private JMenuItem mntmx_7;
+	private JMenuItem mntmColorCycle;
+	private JMenu mnColorCycling;
+	private JMenuItem mntmStart;
+	private JMenuItem mntmStop;
 	
  
 	
@@ -104,6 +112,24 @@ public class Display extends Canvas{
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Error, look and feel not supported: " + e);
 		}
+		
+		//create the default gradient
+		gradient = new Gradient();
+		gradient.addPoint(new GradientPoint(Color.RED, 0));
+		gradient.addPoint(new GradientPoint(Color.ORANGE, 0.1f));
+		gradient.addPoint(new GradientPoint(Color.YELLOW, 0.2f));
+		gradient.addPoint(new GradientPoint(Color.GREEN, 0.3f));
+		gradient.addPoint(new GradientPoint(Color.BLUE, 0.4f));
+		gradient.addPoint(new GradientPoint(Color.RED, 0.5f));
+		gradient.addPoint(new GradientPoint(Color.ORANGE, 0.6f));
+		gradient.addPoint(new GradientPoint(Color.YELLOW, 0.7f));
+		gradient.addPoint(new GradientPoint(Color.GREEN, 0.8f));
+		gradient.addPoint(new GradientPoint(Color.BLUE, 0.9f));
+		gradient.addPoint(new GradientPoint(Color.RED, 1));
+
+		//set the color offset to 0 to start
+		colorOffset=0;
+		
 	}
 	
 	/**
@@ -344,11 +370,34 @@ public class Display extends Canvas{
 		mntmx_7 = new JMenuItem("3840 x 2160");
 		mntmx_7.setToolTipText("4k");
 		mnSetResolution.add(mntmx_7);
-		mntmx_7.addActionListener(new ActionListener() {
+		
+		mnColorCycling = new JMenu("Color cycling");
+		mnColorCycling.setToolTipText("Cycle the color gradient to create animation");
+		mnView.add(mnColorCycling);
+		
+		mntmStart = new JMenuItem("Start");
+		mntmStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				resizeGraph(3840,2160);
+				colorCycle = new ColorCycle(0.005, Launcher.display);
+				colorCycle.start();
+				mntmStart.setEnabled(false);
+				mntmStop.setEnabled(true);
 			}
 		});
+		mnColorCycling.add(mntmStart);
+		
+		mntmStop = new JMenuItem("Stop");
+		mntmStop.setEnabled(false);
+		mntmStop.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				colorCycle.stopCycle();
+				mntmStop.setEnabled(false);
+				mntmStart.setEnabled(true);
+			}
+		});
+		mnColorCycling.add(mntmStop);
+		
+		
 		
 		
 		
@@ -436,6 +485,13 @@ public class Display extends Canvas{
 		canvasG = canvas.getGraphics();		//save the canvas's graphics object for later use when redrawing the canvas
 	}
 	
+	public void setColorOffset(double value) {
+		if(value>1||value<0) {
+			return;
+		}
+		colorOffset = value;
+	}
+	
 	/**
 	 * Update the display JLabels to reflect a change in the graph settings
 	 */
@@ -471,7 +527,7 @@ public class Display extends Canvas{
 	 * 
 	 * @param canvasG The graphics object used to draw to the canvas, comes from the display window.
 	 */
-	public void render(Graphics frameG) {				//this render method is called from the display class after the canvas is visible, or when repainting the canvas
+	private void render(Graphics frameG) {				//this render method is called from the display class after the canvas is visible, or when repainting the canvas
 		for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
 			for (int y=0;y<Launcher.height;y++) {
 	    		   
@@ -480,7 +536,8 @@ public class Display extends Canvas{
 		    		   Launcher.buffImag.setRGB(x, y, Color.BLACK.getRGB());
 	    		   }else { 
 		    		  		//set the color by creating a HSB color, set the hue to be the result(number of iterations to reach threshold) divided by the limit (max number of iterations), 
-	    			   Launcher.buffImag.setRGB(x, y, Color.getHSBColor((float)result/Launcher.limit, 1, 1).getRGB());		//set the pixel color of the buffered image accordingly
+	    			  // Launcher.buffImag.setRGB(x, y, Color.getHSBColor((float)result/Launcher.limit, 1, 1).getRGB());		//set the pixel color of the buffered image accordingly
+	    			   Launcher.buffImag.setRGB(x, y, gradient.getColor((float)result/Launcher.limit + colorOffset).getRGB());		//set the pixel color of the buffered image accordingly
 	    		   }								
 	    	   }
 	       }

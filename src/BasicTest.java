@@ -44,7 +44,7 @@ public class BasicTest extends RecursiveAction{
 			double value = z.abs();
 			if (value>=threshold) {
 				if(smoothingCount>=2) {					//iterate 3 more times to reduce the error when calculating the smoothing algorithm
-					result = smoothShading(i,value);			//figure out what the required number of iterations should be (ex 3.52233)
+					result = smoothShading(i,value);			//figure out what the required number of iterations should be (ex 3.52233 vs 3)
 					break;
 				}
 				smoothingCount++;
