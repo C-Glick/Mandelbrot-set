@@ -54,6 +54,7 @@ public class Display extends Canvas{
 	Gradient gradient;
 	double colorOffset;
 	ColorCycle colorCycle;
+
 	
 	String OS = System.getProperty("os.name");
 	File userSaveFile;		//the file location with no numbering
@@ -129,6 +130,7 @@ public class Display extends Canvas{
 
 		//set the color offset to 0 to start
 		colorOffset=0;
+		colorCycle = new ColorCycle(0.005, this);
 		
 	}
 	
@@ -378,8 +380,7 @@ public class Display extends Canvas{
 		mntmStart = new JMenuItem("Start");
 		mntmStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				colorCycle = new ColorCycle(0.005, Launcher.display);
-				colorCycle.start();
+				colorCycle.startCycle();
 				mntmStart.setEnabled(false);
 				mntmStop.setEnabled(true);
 			}
@@ -480,9 +481,10 @@ public class Display extends Canvas{
 		frame.getContentPane().add(canvas);
 		
 		
-		frame.pack();					//automatically set the width and height of the main frame window to fit everything
-		frame.setVisible(true);			//make everything visible
-		canvasG = canvas.getGraphics();		//save the canvas's graphics object for later use when redrawing the canvas
+		frame.pack();							//automatically set the width and height of the main frame window to fit everything
+		frame.setLocationRelativeTo(null);		//center window
+		frame.setVisible(true);					//make everything visible
+		canvasG = canvas.getGraphics();			//save the canvas's graphics object for later use when redrawing the canvas
 	}
 	
 	public void setColorOffset(double value) {
@@ -551,6 +553,12 @@ public class Display extends Canvas{
 	public void resizeGraph(int newX, int newY) {
 		//clear graph
 		autoResize = true;		//stop the resize action listener from taking action
+		boolean resumeColorCycle = false;
+		if(colorCycle.running) {
+			colorCycle.stopCycle();		//stop color cycling
+			resumeColorCycle = true;
+		}
+		
 		for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
 			for (int y=0;y<Launcher.height;y++) {
 		    		   Launcher.resultsArray[x][y] = 0;
@@ -571,9 +579,19 @@ public class Display extends Canvas{
 		}
 		
 		launcher.refresh();
+		if(resumeColorCycle) {		//start color cycling again
+			colorCycle.startCycle();
+		}
+		
 	}
 	
 	private void manualResizeGraph () {
+		boolean resumeColorCycle = false;
+		if(colorCycle.running) {
+			colorCycle.stopCycle();		//stop color cycling
+			resumeColorCycle = true;
+		}
+		
 		//clear graph
 		for (int x=0;x<Launcher.width;x++) {					//loop through all x and y values
 			for (int y=0;y<Launcher.height;y++) {
@@ -589,6 +607,10 @@ public class Display extends Canvas{
 		Launcher.buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 		
 		launcher.refresh();
+		
+		if(resumeColorCycle) {		//start color cycling again	
+			colorCycle.startCycle();
+		}
 	}
 	
 	/**

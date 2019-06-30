@@ -1,3 +1,4 @@
+import java.util.Date;
 
 /**
  * A class to create a new thread and modify the colorOffset variable 
@@ -8,6 +9,7 @@ public class ColorCycle extends Thread {
 	double speed;		
 	Display display;
 	boolean running;
+	ColorCycle child;
 	
 	/**
 	 * create a new colorCycle thread with the given speed and controlling the given display.
@@ -19,15 +21,40 @@ public class ColorCycle extends Thread {
 	ColorCycle(double speed,Display display){
 		this.speed = speed;
 		this.display = display;
-		running=true;
+		running=false;
 	}
 	
+	/**
+	 * Start the color cycle, create a new child thread and begin execution of child.
+	 * This allows way only one ColorCycle object is required else where.
+	 */
+	public void startCycle() {
+		running=true;
+		child = new ColorCycle(this.speed, this.display);
+		child.start();
+	}
+	
+	/**
+	 * The actual execution, increments the display color offset
+	 * by the speed amount passed in at object initialization. 
+	 * limits the FPS to 30.
+	 */
 	public void run() {
 		running=true;
-		for(double i=0; running; i+=speed) {
-			if(i>=1) {i=0;}
-			display.setColorOffset(i);
-			display.repaint();
+		Date lastUpdate = new Date();
+		Date currentTime = new Date();
+		double i=0;
+		
+		while(running) {
+			currentTime = new Date();
+			if(currentTime.getTime() - lastUpdate.getTime() >= 16) {		//if it has been more than 33 milliseconds since last update (30fps)
+				lastUpdate = currentTime;
+				if(i>=1) {i=0;}
+				display.setColorOffset(i);
+				display.repaint();
+				i+=speed;
+			}
+			
 
 		}
 	}
@@ -36,9 +63,18 @@ public class ColorCycle extends Thread {
 	 * Stop the color cycling.
 	 */
 	public void stopCycle() {
-		running=false;
+		child.stopChildCycle();
+		this.running = false;
+		
 		display.setColorOffset(0);
 		display.repaint();
+	}
+	
+	/**
+	 * intended to only be run by children object.
+	 */
+	private void stopChildCycle() {
+		running=false;
 	}
 
 }
