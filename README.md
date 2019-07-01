@@ -1,5 +1,9 @@
 # Mandelbrot-set
 A java program to generate a graph of the mandelbrot set
 
+The base equation: z=z<sup>2</sup>+c
 
-![image](https://i.imgur.com/Cgvn2v6.jpg)
+Learn more about the mandelbrot set here ---> [Wikipedia.com](https://en.wikipedia.org/wiki/Mandelbrot_set)
+
+![image](/demo.gif)
+![image](/demo2.gif)
