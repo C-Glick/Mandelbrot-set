@@ -372,6 +372,11 @@ public class Display extends Canvas{
 		mntmx_7 = new JMenuItem("3840 x 2160");
 		mntmx_7.setToolTipText("4k");
 		mnSetResolution.add(mntmx_7);
+		mntmx_7.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resizeGraph(3840,2160);
+			}
+		});
 		
 		mnColorCycling = new JMenu("Color cycling");
 		mnColorCycling.setToolTipText("Cycle the color gradient to create animation");
