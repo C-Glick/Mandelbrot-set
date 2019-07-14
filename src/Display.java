@@ -51,6 +51,7 @@ public class Display extends Canvas{
 	Canvas canvas;
 	Graphics canvasG;
 	
+	boolean absoluteColorMode;
 	Gradient gradient;
 	double colorOffset;
 	ColorCycle colorCycle;
@@ -68,6 +69,8 @@ public class Display extends Canvas{
 	JLabel centerXDisplay;
 	JLabel centerYDisplay;
 	JProgressBar progressBar;
+	
+	private ColorPicker picker;
 	
 	Font font = new Font("Arial Unicode MS", Font.PLAIN, 14);
 	private JMenuItem highPrecisionBtn;
@@ -97,6 +100,9 @@ public class Display extends Canvas{
 	private JMenu mnColorCycling;
 	private JMenuItem mntmStart;
 	private JMenuItem mntmStop;
+	private JMenu mnColoringMode;
+	private JMenuItem mntmAbsoulteColoring;
+	private JMenuItem mntmRelativeColoring;
 	
  
 	
@@ -113,6 +119,11 @@ public class Display extends Canvas{
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Error, look and feel not supported: " + e);
 		}
+		
+		absoluteColorMode=true;
+		
+		picker = new ColorPicker();
+		picker.show();
 		
 		//create the default gradient
 		gradient = new Gradient();
@@ -403,6 +414,36 @@ public class Display extends Canvas{
 		});
 		mnColorCycling.add(mntmStop);
 		
+		mnColoringMode = new JMenu("Coloring Mode");
+		mnView.add(mnColoringMode);
+		
+		mntmAbsoulteColoring = new JMenuItem("Absolute coloring");
+		mntmAbsoulteColoring.setEnabled(false);
+		mntmAbsoulteColoring.setToolTipText("Colors each point based only on the number of iterations. Colors will remain the same as limit changes");
+		mnColoringMode.add(mntmAbsoulteColoring);
+		mntmAbsoulteColoring.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				absoluteColorMode=true;
+				mntmRelativeColoring.setEnabled(true);
+				mntmAbsoulteColoring.setEnabled(false);
+				repaint();
+			}
+		});
+		
+		mntmRelativeColoring = new JMenuItem("Relative coloring ");
+		mntmRelativeColoring.setEnabled(true);
+		mntmRelativeColoring.setToolTipText("Colors each point based on how close it got to reaching the limit."
+				+ " Therefore colors will change as the limit changes.");
+		mnColoringMode.add(mntmRelativeColoring);
+		mntmRelativeColoring.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				absoluteColorMode=false;
+				mntmAbsoulteColoring.setEnabled(true);
+				mntmRelativeColoring.setEnabled(false);
+				repaint();
+			}
+		});
+		
 		
 		
 		
@@ -486,7 +527,7 @@ public class Display extends Canvas{
 		frame.getContentPane().add(canvas);
 		
 		
-		frame.pack();							//automatically set the width and height of the main frame window to fit everything
+		//frame.pack();							//automatically set the width and height of the main frame window to fit everything
 		frame.setLocationRelativeTo(null);		//center window
 		frame.setVisible(true);					//make everything visible
 		canvasG = canvas.getGraphics();			//save the canvas's graphics object for later use when redrawing the canvas
@@ -541,11 +582,15 @@ public class Display extends Canvas{
 	    		   double result = Launcher.resultsArray[x][y];				//get the result of the complex number at each pixel location
 	    		   if (result==0) {			//is in set
 		    		   Launcher.buffImag.setRGB(x, y, Color.BLACK.getRGB());
-	    		   }else { 
-		    		  		//set the color by creating a HSB color, set the hue to be the result(number of iterations to reach threshold) divided by the limit (max number of iterations), 
-	    			  // Launcher.buffImag.setRGB(x, y, Color.getHSBColor((float)result/Launcher.limit, 1, 1).getRGB());		//set the pixel color of the buffered image accordingly
-	    			   Launcher.buffImag.setRGB(x, y, gradient.getColor((float)result/Launcher.limit + colorOffset).getRGB());		//set the pixel color of the buffered image accordingly
-	    		   }								
+	    		   }else if(absoluteColorMode) { 
+		    		  		//set the color by creating a HSB color, set the hue to be the result(number of iterations to reach threshold) divided by 100, 
+	    			  		//set the pixel color of the buffered image accordingly
+	    			   Launcher.buffImag.setRGB(x, y, gradient.getColor((float)result/200 + colorOffset).getRGB());		//set the pixel color of the buffered image accordingly
+	    		   }else {
+			    			 //set the color by creating a HSB color, set the hue to be the result(number of iterations to reach threshold) divided by the limit (max number of iterations), 
+		   			  		//set the pixel color of the buffered image accordingly
+		   			   Launcher.buffImag.setRGB(x, y, gradient.getColor((float)result/Launcher.limit + colorOffset).getRGB());		//set the pixel color of the buffered image accordingly
+	    		   }
 	    	   }
 	       }
 		 frameG.drawImage(Launcher.buffImag, 0, 0, null);			//draw the buffered image to the canvas

@@ -48,12 +48,8 @@ public class Gradient {
 	public Color getColor(double position) {
 		Color result = Color.BLACK;
 		
-		//if outside of the gradient, handle
-		if(position<0) {
-			position +=1;
-		}else if(position >1) {
-			position -=1;
-		}
+		//normalize the position, if it is not within 0-1 make it
+		position = normalize(position);
 		
 		//find which points the asked position is between
 		GradientPoint pointA;
@@ -76,6 +72,16 @@ public class Gradient {
 			}
 		}
 		return result;
+	}
+	private double normalize(double position) {
+		if(position<0) {
+			position++;
+			position=normalize(position);
+		}else if(position>1) {
+			position--;
+			position=normalize(position);
+		}
+		return position;
 	}
 	
 
