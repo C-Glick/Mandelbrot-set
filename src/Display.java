@@ -2,6 +2,7 @@ import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Graphics;
 
@@ -72,6 +73,8 @@ public class Display extends Canvas{
 	
 	private ColorPicker picker;
 	
+	private Cursor cursor;
+	
 	Font font = new Font("Arial Unicode MS", Font.PLAIN, 14);
 	private JMenuItem highPrecisionBtn;
 	private JMenuItem lowPrecisionBtn;
@@ -120,6 +123,8 @@ public class Display extends Canvas{
 			JOptionPane.showMessageDialog(null, "Error, look and feel not supported: " + e);
 		}
 		
+		cursor = new Cursor(Cursor.HAND_CURSOR);
+		
 		absoluteColorMode=true;
 		
 		picker = new ColorPicker();
@@ -127,6 +132,7 @@ public class Display extends Canvas{
 		
 		//create the default gradient
 		gradient = new Gradient();
+		
 		gradient.addPoint(new GradientPoint(Color.RED, 0));
 		gradient.addPoint(new GradientPoint(Color.ORANGE, 0.1f));
 		gradient.addPoint(new GradientPoint(Color.YELLOW, 0.2f));
@@ -523,6 +529,7 @@ public class Display extends Canvas{
 		canvas.setSize(width, height);		//set the canvas width and height
 		canvas.setFocusable(false);
 		canvas.addMouseListener(launcher.getMouseManager());
+		canvas.setCursor(cursor);
 		canvas.setBackground(Color.BLACK);
 		frame.getContentPane().add(canvas);
 		
@@ -549,6 +556,20 @@ public class Display extends Canvas{
 		centerXDisplay.setText("X = "+Launcher.center.real);
 		centerYDisplay.setText("Y = "+Launcher.center.imag);
 		
+	}
+	/**
+	 * Change the cursor that is displayed over the graph.
+	 * @param wait a boolean, true shows Cursor.WAIT_CURSOR 
+	 * while false shows Cursor.HAND_CURSOR.
+	 */
+	public void waitCursor(boolean wait) {
+		if(wait) {
+			cursor = new Cursor(Cursor.WAIT_CURSOR);
+			canvas.setCursor(cursor);
+		}else {
+			cursor = new Cursor(Cursor.HAND_CURSOR);
+			canvas.setCursor(cursor);
+		}
 	}
 	
 	/**

@@ -1,11 +1,15 @@
+import java.awt.Cursor;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class MouseManager implements MouseListener{
 	Launcher launcher;
 
+
 	public MouseManager(Launcher launcher) {
 		this.launcher = launcher;
+		
+		
 	}
 	@Override
 	public void mouseClicked(MouseEvent event) {
@@ -23,13 +27,10 @@ public class MouseManager implements MouseListener{
 
 	@Override
 	public void mouseEntered(MouseEvent event) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void mouseExited(MouseEvent event) {
-		// TODO Auto-generated method stub
 		
 	}
 

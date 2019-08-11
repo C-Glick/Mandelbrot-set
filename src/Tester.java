@@ -1,3 +1,4 @@
+import java.awt.Cursor;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.Duration;
@@ -5,6 +6,7 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+
 
 public class Tester{
 	double threshold=Launcher.threshold;
@@ -52,6 +54,7 @@ public class Tester{
 		limit = Launcher.limit;		//update the limit to be the same as it is in Launcher
 		
 		if(!Launcher.firstBoot) {	//dont call progress bars on the first boot
+			Launcher.display.waitCursor(true);		//set cursor to the wait cursor to show processing
 			//set progress bar data
 			Launcher.display.progressBar.setMinimum(0);
 			Launcher.display.progressBar.setMaximum(width*height);
@@ -78,7 +81,7 @@ public class Tester{
 					commonPool.submit(task);														//submits BasicTest to pool to be executed later
 				}
 			}    	
-		}
+		}		
 		while(!commonPool.isQuiescent()) {		//loop until all test have finished executing
 			if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height - commonPool.getQueuedSubmissionCount());}  //update progress bar
 			try {
@@ -87,7 +90,11 @@ public class Tester{
 				e.printStackTrace();
 			}
 		}
-		if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height);}	//set the progress bar to 100%
+		if(!Launcher.firstBoot) {
+			Launcher.display.progressBar.setValue(width*height);		//set the progress bar to 100%
+			Launcher.display.waitCursor(false);							//set to normal cursor
+		}	
+		
 	}
 	
 	//tests 3 and 4 are for high precision calculations
@@ -133,11 +140,13 @@ public class Tester{
 	public void test4(ComplexLong topLeftHP, ComplexLong bottomRightHP, BigDecimal widthHP, BigDecimal heightHP){
 		startTime = System.currentTimeMillis();
 		
+		
 		int width = widthHP.intValue();
 		int height = heightHP.intValue();		
 		limit = Launcher.limit;
 		
 		if(!Launcher.firstBoot) {
+			Launcher.display.waitCursor(true);		//set cursor to the wait cursor to show processing
 			//set progress bar data
 			Launcher.display.progressBar.setMinimum(0);
 			Launcher.display.progressBar.setMaximum(width*height);
@@ -169,6 +178,7 @@ public class Tester{
 				}
 			}
 		}
+		
 		while(!commonPool.isQuiescent()) {
 			Long currentTime = System.currentTimeMillis();
 			Long timeTaken = currentTime - startTime;
@@ -186,6 +196,9 @@ public class Tester{
 				e.printStackTrace();
 			}
 		}
-		if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height);}	//set the progress bar to 100%
+		if(!Launcher.firstBoot) {
+			Launcher.display.progressBar.setValue(width*height);		//set the progress bar to 100%
+			Launcher.display.waitCursor(false);							//set cursor to the hand cursor
+		}	
 	}
 }
