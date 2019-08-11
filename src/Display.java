@@ -527,7 +527,7 @@ public class Display extends Canvas{
 		frame.getContentPane().add(canvas);
 		
 		
-		//frame.pack();							//automatically set the width and height of the main frame window to fit everything
+		frame.pack();							//automatically set the width and height of the main frame window to fit everything
 		frame.setLocationRelativeTo(null);		//center window
 		frame.setVisible(true);					//make everything visible
 		canvasG = canvas.getGraphics();			//save the canvas's graphics object for later use when redrawing the canvas

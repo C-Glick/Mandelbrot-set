@@ -69,8 +69,11 @@ public class Launcher {
 	public void calculate(Launcher launcher) {
 		
 		if(!highPrecision) { //low precision
-			topLeft = new Complex(center.getReal()-(width/(scale*512)),center.getImag()+(height/(scale*512)));					//Determine the complex numbers that correspond to the topLeft and bottom right pixels of the window
-			bottomRight = new Complex(center.getReal()+(width/(scale*512)),center.getImag()-(height/(scale*512)));				//scale is multiplied by 512 to give good initial size
+			double halfWidth = ((double)width/(scale*(double)512));
+			double halfHeight = ((double)height/(scale*(double)512));
+			
+			topLeft = new Complex(center.getReal()-halfWidth, center.getImag()+halfHeight);					//Determine the complex numbers that correspond to the topLeft and bottom right pixels of the window
+			bottomRight = new Complex(center.getReal()+halfWidth, center.getImag()-halfHeight);				//scale is multiplied by 512 to give good initial size
 			
 			//launcher.setResultsArray(tester.test2(topLeft, bottomRight, width, height));						//tell the tester object to run test #2 given the topLeft and bottomRight Complex numbers
 																												//then saves the results to resultsArray

@@ -62,10 +62,10 @@ public class Tester{
 		//finds the complex numbers based on the pixel numbers
 		//then tests those numbers 
 		for(int x=0; x<width; x++) {
-			double real= ((bottomRight.getReal()-topLeft.getReal())/width)*x+topLeft.getReal();
+			double real= ((bottomRight.getReal()-topLeft.getReal())/ (double) width)* (double) x+topLeft.getReal();
 			
 			for(int y=0;y<height;y++) {
-				double imag= topLeft.getImag()-((topLeft.getImag()-bottomRight.getImag())/height)*y;
+				double imag= topLeft.getImag()-((topLeft.getImag()-bottomRight.getImag())/ (double) height)* (double) y;
 				
 				//bulb checking
 				double q = Math.pow((real-0.25),2)+Math.pow(imag, 2);
