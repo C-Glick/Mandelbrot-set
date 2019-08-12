@@ -23,21 +23,28 @@ public class KeyManager implements KeyListener{
 		pUp = keys[KeyEvent.VK_PAGE_UP];			//limit up
 		pDown = keys[KeyEvent.VK_PAGE_DOWN];		//limit down
 		
-		if(launcher.highPrecision) {
-			if(up) {zoomInHP();}
-				else if(down) {zoomOutHP();}
-			
-			if(pUp) {limitUp();}
-				else if (pDown) {limitDown();}	
-		}
 		
-		else {
+		switch (launcher.precision) {
+		case LOW_PRECISION:
 			if(up) {zoomIn();}
 				else if (down) {zoomOut();}
-			
+		
 			if(pUp) {limitUp();}
 				else if (pDown) {limitDown();}
+			break;
+		case HIGH_PRECISION:
+			break;
+		case INFINITE_PRECISION:
+			if(up) {zoomInIP();}
+				else if(down) {zoomOutIP();}
+		
+			if(pUp) {limitUp();}
+				else if (pDown) {limitDown();}	
+			break;
 		}
+		
+		
+		
 		
 	}
 
@@ -57,8 +64,8 @@ public class KeyManager implements KeyListener{
 		launcher.refresh();
 	}
 	
-	public void zoomInHP() {
-		launcher.setScaleHP(launcher.getScaleHP().multiply(new BigDecimal(2),Launcher.rMode));
+	public void zoomInIP() {
+		launcher.setScaleIP(launcher.getScaleHP().multiply(new BigDecimal(2),Launcher.rMode));
 		launcher.refresh();
 	}
 	
@@ -66,8 +73,8 @@ public class KeyManager implements KeyListener{
 		launcher.setScale(launcher.getScale()/2);
 		launcher.refresh();
 	}
-	public void zoomOutHP() {
-		launcher.setScaleHP(launcher.getScaleHP().divide(new BigDecimal(2),Launcher.rMode));
+	public void zoomOutIP() {
+		launcher.setScaleIP(launcher.getScaleHP().divide(new BigDecimal(2),Launcher.rMode));
 		launcher.refresh();
 	}
 	

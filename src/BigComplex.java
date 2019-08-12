@@ -7,29 +7,29 @@ import java.math.RoundingMode;
  * @author Colton Glick
  *
  */
-public class ComplexLong {
+public class BigComplex {
 	BigDecimal real;
 	BigDecimal imag;
 	static MathContext rMode = new MathContext(32, RoundingMode.HALF_UP);	     //Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round up.
 	
 	/**
 	 * Complex number example: (2+5i), real = 2, imag = 5.
-	 * Constructor for a ComplexLong object. Uses BigDecimal objects to create high Precision objects.
+	 * Constructor for a BigComplex object. Uses BigDecimal objects to create high Precision objects.
 	 * when creating new BigDecimal objects, use strings rather than doubles for the best results, 
 	 * 'new BigDecimal("48.02761");' not 'new BigDecimal(someDouble);'
 	 * @param real	A BigDecimal object to represent the real part of the complex number
 	 * @param imag	A BigDecimal object to represent the imaginary part of the complex number
 	 */
-	ComplexLong(BigDecimal real,BigDecimal imag) {	
+	BigComplex(BigDecimal real,BigDecimal imag) {	
 		this.real = real;
 		this.imag = imag;
 	}
 	
 	/**
-	 * Add the provided ComplexLong number to this object.
-	 * @param num A ComplexLong number to add to this object.
+	 * Add the provided BigComplex number to this object.
+	 * @param num A BigComplex number to add to this object.
 	 */
-	public void add(ComplexLong num) {
+	public void add(BigComplex num) {
 		real = getReal().add(num.getReal(), rMode);
 		imag = getImag().add(num.getImag(), rMode);
 
@@ -40,7 +40,7 @@ public class ComplexLong {
 	 * 
 	 * @param num the BigDecimal value to multiply by
 	 */
-	public void multiply(ComplexLong num) {
+	public void multiply(BigComplex num) {
 		//(2+5i)*(3+8i) need to use the FOIL method
 		
 				BigDecimal F = getReal().multiply(num.getReal(), rMode);		//will give some real number
@@ -65,7 +65,7 @@ public class ComplexLong {
 	
 	/**
 	 * Returns the absolute value of this complex number using the pythagorean theorem.
-	 * @return The absolute value of this ComplexLong number.
+	 * @return The absolute value of this BigComplex number.
 	 */
 	public BigDecimal abs() {
 		
@@ -92,14 +92,14 @@ public class ComplexLong {
 	}
 	
 	/**
-	 * Set the maximum number of digits used for all ComplexLong calculations.
+	 * Set the maximum number of digits used for all BigComplex calculations.
 	 * (default is 128 digits)
 	 * @param value an Integer, the maximum number of digits to use.
 	 */
 	public void setCalcPrecision(int value) {
 		rMode = new MathContext(value, RoundingMode.HALF_UP);	    //Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round up.
 																	//Updates the rMode object (rounding mode).
-																	//rMode is static so it changes for all ComplexLong objects
+																	//rMode is static so it changes for all BigComplex objects
 		Launcher.rMode = rMode;			//also update rMode in the launcher as some math is also done there
 		Launcher.tester.rMode = rMode;
 	}

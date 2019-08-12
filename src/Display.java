@@ -76,7 +76,7 @@ public class Display extends Canvas{
 	private Cursor cursor;
 	
 	Font font = new Font("Arial Unicode MS", Font.PLAIN, 14);
-	private JMenuItem highPrecisionBtn;
+	private JMenuItem infinitePrecisionBtn;
 	private JMenuItem lowPrecisionBtn;
 	private JMenuBar menuBar;
 	private JMenu mnFile;
@@ -240,19 +240,19 @@ public class Display extends Canvas{
 		mnView = new JMenu("View");
 		menuBar.add(mnView);
 		
-		highPrecisionBtn = new JMenuItem("High Precision");				//button to enable high precision mode
-		highPrecisionBtn.setToolTipText("Use Java's BigDecimal class in order to generate a graph with much more precice values, allows for a larger scale factor but icreases computation time significantly");
-		highPrecisionBtn.setFocusable(false);
-		highPrecisionBtn.addActionListener(new ActionListener() {
+		infinitePrecisionBtn = new JMenuItem("Infinite Precision");				//button to enable infinite precision mode
+		infinitePrecisionBtn.setToolTipText("Use Java's BigDecimal class in order to generate a graph with much more precice values, allows for a larger scale factor but icreases computation time significantly");
+		infinitePrecisionBtn.setFocusable(false);
+		infinitePrecisionBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				lowPrecisionBtn.setEnabled(true);
-				highPrecisionBtn.setEnabled(false);
+				infinitePrecisionBtn.setEnabled(false);
 				
-				launcher.setHighPrecision(true);
+				launcher.setPrecision(Launcher.Precision.INFINITE_PRECISION);
 				launcher.refresh();
 			}
 		});
-		mnView.add(highPrecisionBtn);
+		mnView.add(infinitePrecisionBtn);
 		
 		lowPrecisionBtn = new JMenuItem("Low Precision");							//button to enable low precision mode
 		lowPrecisionBtn.setToolTipText("Use 64 bit floating point numbers to calculate values, provides quick calculations. Good until 10^14");
@@ -261,9 +261,9 @@ public class Display extends Canvas{
 		lowPrecisionBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				lowPrecisionBtn.setEnabled(false);
-				highPrecisionBtn.setEnabled(true);
+				infinitePrecisionBtn.setEnabled(true);
 				
-				launcher.setHighPrecision(false);
+				launcher.setPrecision(Launcher.Precision.LOW_PRECISION);
 				launcher.refresh();
 			}
 		});
@@ -284,10 +284,15 @@ public class Display extends Canvas{
 		mntmResetPositionOnly = new JMenuItem("Reset position only");
 		mntmResetPositionOnly.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(launcher.highPrecision) {
-					launcher.setCenterHP(new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO));
-				}else {
+				switch (launcher.precision) {
+				case LOW_PRECISION:
 					launcher.setCenter(new Complex(0,0));
+					break;
+				case HIGH_PRECISION:
+					break;
+				case INFINITE_PRECISION:
+					launcher.setCenterIP(new BigComplex(BigDecimal.ZERO,BigDecimal.ZERO));
+					break;
 				}
 				launcher.refresh();
 			}
@@ -307,10 +312,15 @@ public class Display extends Canvas{
 		mntmResetAll.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				launcher.setScale(1);
-				if(launcher.highPrecision) {
-					launcher.setCenterHP(new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO));
-				}else {
+				switch (launcher.precision) {
+				case LOW_PRECISION:
 					launcher.setCenter(new Complex(0,0));
+					break;
+				case HIGH_PRECISION:
+					break;
+				case INFINITE_PRECISION:
+					launcher.setCenterIP(new BigComplex(BigDecimal.ZERO,BigDecimal.ZERO));
+					break;
 				}
 				launcher.setLimit(150);
 				launcher.refresh();

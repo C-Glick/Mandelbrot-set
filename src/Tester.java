@@ -12,7 +12,7 @@ public class Tester{
 	double threshold=Launcher.threshold;
 	BigDecimal thresholdHP = BigDecimal.valueOf(Launcher.threshold);		//threshold doesn't really need high precision but a BigDecimal object is needed for calculations
 	int limit=Launcher.limit;		//number of iterations to run before stopping
-	MathContext rMode = ComplexLong.rMode;
+	MathContext rMode = BigComplex.rMode;
 	ForkJoinPool commonPool = ForkJoinPool.commonPool();
 	Long startTime;
 	
@@ -109,8 +109,8 @@ public class Tester{
 	 * @see test1
 	 * @deprecated use HPTest class instead
 	 */
-	public int test3(ComplexLong c) {
-		ComplexLong z = new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO);
+	public int test3(BigComplex c) {
+		BigComplex z = new BigComplex(BigDecimal.ZERO,BigDecimal.ZERO);
 		int result= 0;
 		
 		for(int i=1; i<=limit; i++) {
@@ -137,7 +137,7 @@ public class Tester{
 	 * @return	A 2D array of longs showing the number of iterations taken.
 	 * @see test2
 	 */
-	public void test4(ComplexLong topLeftHP, ComplexLong bottomRightHP, BigDecimal widthHP, BigDecimal heightHP){
+	public void test4(BigComplex topLeftHP, BigComplex bottomRightHP, BigDecimal widthHP, BigDecimal heightHP){
 		startTime = System.currentTimeMillis();
 		
 		
@@ -173,7 +173,7 @@ public class Tester{
 					//if true number is in bulb so it has to be in the set (black)
 					Launcher.resultsArray[x][y]= 0;
 				}else {
-					HPTest task = new HPTest(new ComplexLong(real,imag),thresholdHP,x,y);
+					HPTest task = new HPTest(new BigComplex(real,imag),thresholdHP,x,y);
 					commonPool.submit(task);
 				}
 			}

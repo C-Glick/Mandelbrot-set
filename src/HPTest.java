@@ -10,7 +10,7 @@ import java.util.concurrent.RecursiveAction;
 public class HPTest extends RecursiveAction{
 	static final double LOG_THRESHOLD = Math.log(Launcher.threshold);
 	
-	ComplexLong c;
+	BigComplex c;
 	int limit;
 	BigDecimal thresholdHP;
 	int x;
@@ -26,7 +26,7 @@ public class HPTest extends RecursiveAction{
 	 * @param x The pixel x value
 	 * @param y The pixel y value
 	 */
-	HPTest(ComplexLong c, BigDecimal thresholdHP, int x, int y){
+	HPTest(BigComplex c, BigDecimal thresholdHP, int x, int y){
 		this.c = c;
 		this.limit = Launcher.limit;
 		this.thresholdHP = thresholdHP;
@@ -36,7 +36,7 @@ public class HPTest extends RecursiveAction{
 
 	
 	protected void compute() {
-		ComplexLong z = new ComplexLong(BigDecimal.ZERO,BigDecimal.ZERO);
+		BigComplex z = new BigComplex(BigDecimal.ZERO,BigDecimal.ZERO);
 		double result= 0;
 		int smoothingCount=0;
 		

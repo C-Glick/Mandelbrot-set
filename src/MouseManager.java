@@ -15,14 +15,19 @@ public class MouseManager implements MouseListener{
 	public void mouseClicked(MouseEvent event) {
 		System.out.println("Mouse clicked at x="+event.getX()+" y="+event.getY());
 		
-		if(launcher.highPrecision) {
-			launcher.setCenterHP(event.getX(),event.getY());
-			launcher.refresh();
-		}else {
+		switch (launcher.precision) {
+		case LOW_PRECISION:
 			launcher.setCenter(event.getX(),event.getY());
 			launcher.refresh();
+			break;
+		case HIGH_PRECISION:
+			
+			break;
+		case INFINITE_PRECISION:
+			launcher.setCenterIP(event.getX(),event.getY());
+			launcher.refresh();
+			break;
 		}
-		
 	}
 
 	@Override
