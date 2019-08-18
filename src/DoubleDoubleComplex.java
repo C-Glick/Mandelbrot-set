@@ -1,5 +1,3 @@
-import java.math.MathContext;
-import java.math.RoundingMode;
 import resources.DoubleDouble;
 
 /**
@@ -10,7 +8,6 @@ import resources.DoubleDouble;
 public class DoubleDoubleComplex {
 	DoubleDouble real;
 	DoubleDouble imag;
-	static MathContext rMode = new MathContext(32, RoundingMode.HALF_UP);	     //Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round up.
 	
 	/**
 	 * Complex number example: (2+5i), real = 2, imag = 5.
@@ -44,21 +41,21 @@ public class DoubleDoubleComplex {
 		//(2+5i)*(3+8i) need to use the FOIL method
 		
 				
-				DoubleDouble F = getReal().mul(num.getReal());		//will give some real number
-				DoubleDouble O = getReal().mul(num.getImag());		//will give some number*i
-				DoubleDouble I = getImag().mul(num.getReal());
-				DoubleDouble L = getImag().mul(num.getImag());		//will give some number*i^2, i^2 is the same as -1 so this number should be inverted
+				DoubleDouble F = getReal().multiply(num.getReal());		//will give some real number
+				DoubleDouble O = getReal().multiply(num.getImag());		//will give some number*i
+				DoubleDouble I = getImag().multiply(num.getReal());
+				DoubleDouble L = getImag().multiply(num.getImag());		//will give some number*i^2, i^2 is the same as -1 so this number should be inverted
 				
 				//combine and simplify
-				real = F.sub(L);
+				real = F.subtract(L);
 				imag = O.add(I);
 	}
 	/**
 	 * Squares this object.
 	 */
 	public void sqr() {
-		DoubleDouble r = getReal().sqr().sub(getImag().sqr());				//F - L
-		DoubleDouble i = getImag().mul(getReal()).mul(2);			//(O or I) *2
+		DoubleDouble r = getReal().sqr().subtract(getImag().sqr());				//F - L
+		DoubleDouble i = getImag().multiply(getReal()).multiply(DoubleDouble.valueOf(2));			//(O or I) *2
 		real=r;
 		imag=i;
 		

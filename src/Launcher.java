@@ -35,13 +35,15 @@ public class Launcher {
 	}
 	Precision precision = Precision.LOW_PRECISION;					//define the precision state and set it's default value
 	
-	/*static DoubleDoubleComplex topLeftHP;
+	//high precision variables
+	static DoubleDoubleComplex topLeftHP;
 	static DoubleDoubleComplex bottomRightHP;
-	static DoubleDoubleComplex centerHP = new BigComplex(new BigDecimal(Double.toString(center.getReal())),new BigDecimal(Double.toString(center.getImag())));
-	static DoubleDouble widthHP = new BigDecimal(width);
-	static DoubleDouble heightHP = new BigDecimal(height);
-	static DoubleDouble scaleHP = new BigDecimal(scale);
-*/	
+	static DoubleDoubleComplex centerHP;
+	static DoubleDouble widthHP;
+	static DoubleDouble heightHP;
+	static DoubleDouble scaleHP;
+	
+	//infinite precision variables
 	static BigComplex topLeftIP;
 	static BigComplex bottomRightIP;
 	static BigComplex centerIP = new BigComplex(new BigDecimal(Double.toString(center.getReal())),new BigDecimal(Double.toString(center.getImag())));
@@ -91,11 +93,14 @@ public class Launcher {
 				tester.test2(topLeft, bottomRight, width, height);												//tell the tester object to run test #2 given the details about the graph
 				break;																							//the results will be saved into the resultsArray as each thread completes a calculation
 			case HIGH_PRECISION:
+				DoubleDouble halfWidthHP= widthHP.divide(scaleHP.multiply(new DoubleDouble(512)));
+				DoubleDouble halfHeightHP= heightHP.divide(scaleHP.multiply(new DoubleDouble(512)));
+				
+				topLeftHP = new DoubleDoubleComplex(centerHP.getReal().subtract(halfWidthHP), centerHP.getImag().add(halfHeightHP));
+				bottomRightHP = new DoubleDoubleComplex(centerHP.getReal().add(halfWidthHP), centerHP.getImag().subtract(halfHeightHP));
+				
+				tester.test5(topLeftHP, bottomRightHP, widthHP, heightHP);
 				break;
-				
-				
-				
-				
 			case INFINITE_PRECISION:
 				BigDecimal correctedScale = scaleIP.multiply(new BigDecimal("512"));
 				
@@ -115,8 +120,13 @@ public class Launcher {
 		Launcher.scale = input;
 		System.out.println("new scale: " + Launcher.scale);
 	}
+	public void setScaleHP (DoubleDouble input) {
+		Launcher.scaleHP=input;
+		System.out.println("new scale: " + Launcher.scaleHP);
+	}
 	public void setScaleIP(BigDecimal input) {
 		Launcher.scaleIP = input;
+		System.out.println("new scale: " + Launcher.scaleIP);
 	}
 	
 	/**
@@ -127,26 +137,31 @@ public class Launcher {
 	 */
 	public void setCenter(int x, int y) {
 		Complex complex = new Complex(((bottomRight.getReal()-topLeft.getReal())/width)*x+topLeft.getReal(),
-				(((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag()));
-		setCenter(complex);
+									 (((bottomRight.getImag()-topLeft.getImag())/height)*y+topLeft.getImag()));
+		Launcher.center = complex;
+		}
+	public void setCenter(Complex input) {
+		Launcher.center=input;
 	}
 	
-	public void setCenter (Complex input) {
-		Launcher.center = input;
-		Launcher.centerIP = new BigComplex(new BigDecimal(Double.toString(input.getReal())),new BigDecimal(Double.toString(input.getImag())));
+	public void setCenterHP(int x, int y) {
+		DoubleDoubleComplex complexHP= new DoubleDoubleComplex(bottomRightHP.getReal().subtract(topLeftHP.getReal()).divide(widthHP).multiply(new DoubleDouble(x)).add(topLeftHP.getReal()),
+															   bottomRightHP.getImag().subtract(topLeftHP.getImag()).divide(heightHP).multiply(new DoubleDouble(y)).add(topLeftHP.getImag())); 
+		Launcher.centerHP = complexHP;
+	}	
+	public void setCenterHP(DoubleDoubleComplex input) {
+		Launcher.centerHP = input;
 	}
-	public void setCenterIP (BigComplex input) {
-		Launcher.centerIP = input;
-		
-	}
-	
 	public void setCenterIP (int x, int y) {		
-		BigComplex complexLong = new BigComplex(((bottomRightIP.getReal().subtract(topLeftIP.getReal())).divide(widthIP))
+		BigComplex bigComplex = new BigComplex(((bottomRightIP.getReal().subtract(topLeftIP.getReal())).divide(widthIP))
 									.multiply(new BigDecimal(x)).add(topLeftIP.getReal()),
 								((bottomRightIP.getImag().subtract(topLeftIP.getImag())).divide(heightIP))
 										.multiply(new BigDecimal(y)).add(topLeftIP.getImag()));
 		
-		setCenterIP(complexLong);
+		Launcher.centerIP = bigComplex;
+	}
+	public void setCenterIP(BigComplex input) {
+		Launcher.centerIP=input;
 	}
 	
 	public void setLimit (int input) {
@@ -163,6 +178,11 @@ public class Launcher {
 		case LOW_PRECISION:
 			switch (newPrecision){
 			case HIGH_PRECISION:
+				precision = Precision.HIGH_PRECISION;
+				centerHP= new DoubleDoubleComplex(new DoubleDouble(center.getReal()),new DoubleDouble(center.getImag()));
+				widthHP = new DoubleDouble(width);
+				heightHP= new DoubleDouble(height);
+				scaleHP= new DoubleDouble(scale);
 				break;
 			case INFINITE_PRECISION:
 				precision = Precision.INFINITE_PRECISION;
@@ -176,8 +196,18 @@ public class Launcher {
 		case HIGH_PRECISION:
 			switch (newPrecision){
 			case LOW_PRECISION:
+				precision = Precision.LOW_PRECISION;
+				center = new Complex(centerHP.getReal().doubleValue(),centerHP.getImag().doubleValue());
+				width= widthHP.intValue();
+				height= heightHP.intValue();
+				scale= scaleHP.doubleValue();
 				break;
 			case INFINITE_PRECISION:
+				precision = Precision.INFINITE_PRECISION;
+				centerIP = new BigComplex(new BigDecimal(centerHP.getReal().toString()),new BigDecimal(centerHP.getImag().toString()));
+				widthIP = new BigDecimal(widthHP.doubleValue());
+				heightIP = new BigDecimal(heightHP.doubleValue());
+				scaleIP = new BigDecimal(scaleHP.toString());
 				break;
 			}
 			break;
@@ -205,7 +235,10 @@ public class Launcher {
 	public double getScale() {
 		return Launcher.scale;
 	}
-	public BigDecimal getScaleHP() {
+	public DoubleDouble getScaleHP() {
+		return Launcher.scaleHP;
+	}
+	public BigDecimal getScaleIP() {
 		return Launcher.scaleIP;
 	}
 	public int getLimit() {

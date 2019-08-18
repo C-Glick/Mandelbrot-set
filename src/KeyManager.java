@@ -3,6 +3,8 @@ import java.awt.event.KeyListener;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import resources.DoubleDouble;
+
 public class KeyManager implements KeyListener{
 	
 	private boolean[] keys;							//an array of all keys
@@ -33,6 +35,11 @@ public class KeyManager implements KeyListener{
 				else if (pDown) {limitDown();}
 			break;
 		case HIGH_PRECISION:
+			if(up) {zoomInHP();}
+				else if(down) {zoomOutHP();}
+	
+			if(pUp) {limitUp();}
+				else if (pDown) {limitDown();}	
 			break;
 		case INFINITE_PRECISION:
 			if(up) {zoomInIP();}
@@ -64,8 +71,13 @@ public class KeyManager implements KeyListener{
 		launcher.refresh();
 	}
 	
+	public void zoomInHP() {
+		launcher.setScaleHP(launcher.getScaleHP().multiply(DoubleDouble.valueOf(2)));
+		launcher.refresh();
+	}
+	
 	public void zoomInIP() {
-		launcher.setScaleIP(launcher.getScaleHP().multiply(new BigDecimal(2),Launcher.rMode));
+		launcher.setScaleIP(launcher.getScaleIP().multiply(new BigDecimal(2),Launcher.rMode));
 		launcher.refresh();
 	}
 	
@@ -73,8 +85,12 @@ public class KeyManager implements KeyListener{
 		launcher.setScale(launcher.getScale()/2);
 		launcher.refresh();
 	}
+	public void zoomOutHP() {
+		launcher.setScaleHP(launcher.getScaleHP().divide(DoubleDouble.valueOf(2)));
+		launcher.refresh();
+	}
 	public void zoomOutIP() {
-		launcher.setScaleIP(launcher.getScaleHP().divide(new BigDecimal(2),Launcher.rMode));
+		launcher.setScaleIP(launcher.getScaleIP().divide(new BigDecimal(2),Launcher.rMode));
 		launcher.refresh();
 	}
 	

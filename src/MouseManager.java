@@ -21,7 +21,8 @@ public class MouseManager implements MouseListener{
 			launcher.refresh();
 			break;
 		case HIGH_PRECISION:
-			
+			launcher.setCenterHP(event.getX(),event.getY());
+			launcher.refresh();
 			break;
 		case INFINITE_PRECISION:
 			launcher.setCenterIP(event.getX(),event.getY());

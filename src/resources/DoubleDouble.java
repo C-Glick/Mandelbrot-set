@@ -1,2136 +1,1186 @@
 package resources;
-import java.util.Arrays;
-import java.util.Random;
+
+import java.io.Serializable;
 
 /**
- * double: 53 bits DoubleDouble: >106 bits
+ * Immutable, extended-precision floating-point numbers which maintain 106 bits
+ * (approximately 30 decimal digits) of precision.
+ * <p>
+ * A DoubleDouble uses a representation containing two double-precision values.
+ * A number x is represented as a pair of doubles, x.hi and x.lo, such that the
+ * number represented by x is x.hi + x.lo, where
  * 
- * @author Zom-B
- * @since 1.0
- * @see http://crd.lbl.gov/~dhbailey/mpdist/index.html
- * @date 2006/10/22
+ * <pre>
+ *    |x.lo| <= 0.5*ulp(x.hi)
+ * </pre>
+ * 
+ * and ulp(y) means "unit in the last place of y". The basic arithmetic
+ * operations are implemented using convenient properties of IEEE-754
+ * floating-point arithmetic.
+ * <p>
+ * The range of values which can be represented is the same as in IEEE-754. The
+ * precision of the representable numbers is twice as great as IEEE-754 double
+ * precision.
+ * <p>
+ * The correctness of the arithmetic algorithms relies on operations being
+ * performed with standard IEEE-754 double precision and rounding. This is the
+ * Java standard arithmetic model, but for performance reasons Java
+ * implementations are not constrained to using this standard by default. Some
+ * processors (notably the Intel Pentium architecure) perform floating point
+ * operations in (non-IEEE-754-standard) extended-precision. A JVM
+ * implementation may choose to use the non-standard extended-precision as its
+ * default arithmetic mode. To prevent this from happening, this code uses the
+ * Java <tt>strictfp</tt> modifier, which forces all operations to take place in
+ * the standard IEEE-754 rounding model.
+ * <p>
+ * The API provides a value-oriented interface. DoubleDouble values are
+ * immutable; operations on them return new objects carrying the result of the
+ * operation. This provides a much simpler semantics for writing DoubleDouble
+ * expressions, and Java memory management is efficient enough that this imposes
+ * very little performance penalty.
+ * <p>
+ * This implementation uses algorithms originally designed variously by Knuth,
+ * Kahan, Dekker, and Linnainmaa. Douglas Priest developed the first C
+ * implementation of these techniques. Other more recent C++ implementation are
+ * due to Keith M. Briggs and David Bailey et al.
+ * 
+ * <h3>References</h3>
+ * <ul>
+ * <li>Priest, D., <i>Algorithms for Arbitrary Precision Floating Point
+ * Arithmetic</i>, in P. Kornerup and D. Matula, Eds., Proc. 10th Symposium on
+ * Computer Arithmetic, IEEE Computer Society Press, Los Alamitos, Calif., 1991.
+ * <li>Yozo Hida, Xiaoye S. Li and David H. Bailey, <i>Quad-Double Arithmetic:
+ * Algorithms, Implementation, and Application</i>, manuscript, Oct 2000;
+ * Lawrence Berkeley National Laboratory Report BNL-46996.
+ * <li>David Bailey, <i>High Precision Software Directory</i>;
+ * <tt>http://crd.lbl.gov/~dhbailey/mpdist/index.html</tt>
+ * </ul>
+ * 
+ * 
+ * @author Martin Davis
+ * 
  */
-public strictfp class DoubleDouble
-{
-	public static final char[]			BASE_36_TABLE		= { //
-			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', //
-			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', //
-			'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', //
-			'U', 'V', 'W', 'X', 'Y', 'Z'					};
-	public static final char[]			ZEROES				= { //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', //
-			'0', '0', '0', '0', '0'							};
-
-	// public static final double MUL_SPLIT = 0x08000001;
-	public static final double			POSITIVE_INFINITY	= Double.MAX_VALUE / 0x08000001;
-	public static final double			NEGATIVE_INFINITY	= -DoubleDouble.POSITIVE_INFINITY;
-	public static final double			HALF_EPSILON		= 1.1102230246251565E-16;
-	public static final double			EPSILON				= 1.232595164407831E-32;
-
-	public static final DoubleDouble	PI					= new DoubleDouble(3.141592653589793, 1.2246467991473532E-16);
-	public static final DoubleDouble	E					= new DoubleDouble(2.718281828459045, 1.4456468917292502E-16);
-	public static final DoubleDouble	LOG2				= new DoubleDouble(0.6931471805599453, 2.3190468138462996E-17);
-	public static final DoubleDouble	INV_LOG2			= new DoubleDouble(1.4426950408889634, 2.0355273740931033E-17);
-
-	public double						hi;
-	public double						lo;
-
-	// ***********************************************************************//
-	// ************************ Creation functions ***************************//
-	// ***********************************************************************//
-
-	public DoubleDouble()
-	{
-		this.hi = 0;
-		this.lo = 0;
-	}
-
-	public DoubleDouble(double d)
-	{
-		this.hi = d;
-		this.lo = 0;
-	}
-
-	public DoubleDouble(double hi, double lo)
-	{
-		this.hi = hi;
-		this.lo = lo;
-	}
-
-	public DoubleDouble(DoubleDouble dd)
-	{
-		this.hi = dd.hi;
-		this.lo = dd.lo;
-	}
-
-	public void set(double hi)
-	{
-		this.hi = hi;
-		this.lo = 0;
-	}
-
-	public void set(double hi, double lo)
-	{
-		this.hi = hi;
-		this.lo = lo;
-	}
-
-	public void set(DoubleDouble dd)
-	{
-		this.hi = dd.hi;
-		this.lo = dd.lo;
-	}
-
-	public static DoubleDouble random(Random r)
-	{
-		return new DoubleDouble(r.nextDouble(), r.nextDouble() * DoubleDouble.HALF_EPSILON).normalize();
-	}
-
-	public static DoubleDouble randomDynamic(Random r)
-	{
-		DoubleDouble x = new DoubleDouble(r.nextDouble(), r.nextDouble() / (1L << (r.nextInt(11) + 52)));
-		x.mulSelf(DoubleDouble.powOf2(r.nextInt(129) - 64));
-		x.normalizeSelf();
-		if (r.nextBoolean())
-		{
-			x.negSelf();
-		}
-		return x;
-	}
-
-	// ***********************************************************************//
-	// ************************** Other functions ****************************//
-	// ***********************************************************************//
-
-	@Override
-	public String toString()
-	{
-		if (this.hi != this.hi)
-		{
-			return "NaN";
-		}
-		if (this.hi >= DoubleDouble.POSITIVE_INFINITY)
-		{
-			return "Infinity";
-		}
-		if (this.hi <= DoubleDouble.NEGATIVE_INFINITY)
-		{
-			return "-Infinity";
-		}
-		return DoubleDouble.toString(this, 10);
-	}
-
-	/**
-	 * Format a string in an easily readable format. The number is represented
-	 * as scientific form on the following conditions: <br>
-	 * <ol>
-	 * <li>(for big numbers) When the first digit right of the decimal point
-	 * would not be within the first minPrecision positions of the string, <br>
-	 * <li>(for small numbers) When the most significant digit would not be
-	 * within the first minPrecision positions of the string
-	 * </ol>
-	 * <br>
-	 * Where: <code>minPrecision = floor(105 / log2(base) + 1)</code>
+public strictfp class DoubleDouble implements Serializable,
+        Comparable<DoubleDouble>, Cloneable {
+    /**
+	 * 
 	 */
-	public static String toString(DoubleDouble dd, int base)
-	{
-		double digitsPerBit = StrictMath.log(2) / StrictMath.log(base);
-		int minPrecision = (int)StrictMath.floor(105.0 * digitsPerBit + 2);
-
-		// Get the precision. (The minimum number of significant digits required
-		// for an accurate representation of this number)
-		int expHi = (int)((Double.doubleToRawLongBits(dd.hi) & 0x7FF0000000000000L) >> 52);
-		int expLo = dd.lo == 0? expHi - 53 : (int)((Double.doubleToRawLongBits(dd.lo) & 0x7FF0000000000000L) >> 52);
-		int precision = (int)StrictMath.ceil((expHi - expLo + 53) * digitsPerBit);
-		precision = StrictMath.max(minPrecision, precision);
-
-		// Get the raw digit representation.
-		char[] chars = new char[precision + 1];
-		int exp = DoubleDouble.to_digits(dd, chars, precision, base) + 1;
-
-		// Get some properties.
-		int left = StrictMath.max(0, -exp);
-		int right = StrictMath.max(0, exp);
-		if (chars[precision - 1] == 0)
-		{
-			precision--;
-		}
-		boolean sci = -exp >= minPrecision || exp >= minPrecision;
-
-		// Allocate exactly the right size string.
-		StringBuffer out = new StringBuffer(precision + (sci? 3 : left) + (exp > 0? 1 : 2));
-
-		// Build the string.
-		if (dd.hi < 0)
-		{
-			out.append('-');
-		}
-		if (sci)
-		{
-			out.append(chars, 0, 1);
-			out.append('.');
-			out.append(chars, 1, precision - 1);
-			out.append('e');
-			out.append(exp - 1);
-		}
-		else
-		{
-			if (exp <= 0)
-			{
-				out.append('0');
-			}
-			if (right > 0)
-			{
-				out.append(chars, 0, right);
-			}
-			out.append('.');
-			if (left > 0)
-			{
-				if (DoubleDouble.ZEROES.length < left)
-				{
-					System.err.println(left);
-				}
-				else
-				{
-					out.append(DoubleDouble.ZEROES, 0, left);
-				}
-			}
-			out.append(chars, right, precision - right);
-		}
-		return out.toString();
-	}
-
-	private static int to_digits(DoubleDouble dd, char[] s, int precision, int base)
-	{
-		int halfBase = (base + 1) >> 1;
-
-		if (dd.hi == 0.0)
-		{
-			// Assume dd.lo == 0.
-			Arrays.fill(s, 0, precision, '0');
-			return 0;
-		}
-
-		// First determine the (approximate) exponent.
-		DoubleDouble temp = dd.abs();
-		int exp = (int)StrictMath.floor(StrictMath.log(temp.hi) / StrictMath.log(base));
-
-		DoubleDouble p = new DoubleDouble(base);
-		if (exp < -300)
-		{
-			temp.mulSelf(p.pow(150));
-			p.powSelf(-exp - 150);
-			temp.mulSelf(p);
-		}
-		else
-		{
-			p.powSelf(-exp);
-			temp.mulSelf(p);
-		}
-
-		// Fix roundoff errors. (eg. floor(log10(1e9))=floor(8.9999~)=8)
-		if (temp.hi >= base)
-		{
-			exp++;
-			temp.hi /= base;
-			temp.lo /= base;
-		}
-		else if (temp.hi < 1)
-		{
-			exp--;
-			temp.hi *= base;
-			temp.lo *= base;
-		}
-
-		if (temp.hi >= base || temp.hi < 1)
-		{
-			throw new RuntimeException("Can't compute exponent.");
-		}
-
-		// Handle one digit more. Used afterwards for rounding.
-		int numDigits = precision + 1;
-		// Extract the digits.
-		for (int i = 0; i < numDigits; i++)
-		{
-			int val = (int)temp.hi;
-			temp = temp.sub(val);
-			temp = temp.mul(base);
-
-			s[i] = (char)val;
-		}
-
-		if (s[0] <= 0)
-		{
-			throw new RuntimeException("Negative leading digit.");
-		}
-
-		// Fix negative digits due to roundoff error in exponent.
-		for (int i = numDigits - 1; i > 0; i--)
-		{
-			if (s[i] >= 32768)
-			{
-				s[i - 1]--;
-				s[i] += base;
-			}
-		}
-
-		// Round, handle carry.
-		if (s[precision] >= halfBase)
-		{
-			s[precision - 1]++;
-
-			int i = precision - 1;
-			while (i > 0 && s[i] >= base)
-			{
-				s[i] -= base;
-				s[--i]++;
-			}
-		}
-		s[precision] = 0;
-
-		// If first digit became too high, shift right.
-		if (s[0] >= base)
-		{
-			exp++;
-			for (int i = precision; i >= 1;)
-			{
-				s[i] = s[--i];
-			}
-		}
-
-		// Convert to ASCII.
-		for (int i = 0; i < precision; i++)
-		{
-			s[i] = DoubleDouble.BASE_36_TABLE[s[i]];
-		}
-
-		// If first digit became zero, and exp > 0, shift left.
-		if (s[0] == '0' && exp < 32768)
-		{
-			exp--;
-			for (int i = 0; i < precision;)
-			{
-				s[i] = s[++i];
-			}
-		}
-
-		return exp;
-	}
-
-	// ***********************************************************************//
-	// ************************ Temporary functions **************************//
-	// ***********************************************************************//
-
-	@Override
-	public DoubleDouble clone()
-	{
-		return new DoubleDouble(this.hi, this.lo);
-	}
-
-	public DoubleDouble normalize()
-	{
-		double s = this.hi + this.lo;
-		return new DoubleDouble(s, this.lo + (this.hi - s));
-	}
-
-	public void normalizeSelf()
-	{
-		double a = this.hi;
-		this.hi = a + this.lo;
-		this.lo = this.lo + (a - this.hi);
-	}
-
-	public int intValue()
-	{
-		int rhi = (int)StrictMath.round(this.hi);
-
-		if (this.hi == rhi)
-		{
-			return rhi + (int)StrictMath.round(this.lo);
-		}
-		if (StrictMath.abs(rhi - this.hi) == 0.5 && this.lo < 0.0)
-		{
-			return rhi - 1;
-		}
-		return rhi;
-	}
-
-	public long longValue()
-	{
-		long rhi = StrictMath.round(this.hi);
-
-		if (this.hi == rhi)
-		{
-			return rhi + StrictMath.round(this.lo);
-		}
-		if (StrictMath.abs(rhi - this.hi) == 0.5 && this.lo < 0.0)
-		{
-			return rhi - 1;
-		}
-		return rhi;
-	}
-
-	public static DoubleDouble min(DoubleDouble x, DoubleDouble y)
-	{
-		if (x.hi < y.hi || (x.hi == y.hi && x.lo < y.lo))
-		{
-			return x;
-		}
-		return y;
-	}
-
-	public static DoubleDouble max(DoubleDouble x, DoubleDouble y)
-	{
-		if (x.hi > y.hi || (x.hi == y.hi && x.lo > y.lo))
-		{
-			return x;
-		}
-		return y;
-	}
-
-	public static int sgn(double x)
-	{
-		if (x > 0)
-		{
-			return 1;
-		}
-		if (x < 0)
-		{
-			return -1;
-		}
-		return 0;
-	}
-
-	// ***********************************************************************//
-	// ************************* Simple functions ****************************//
-	// ***********************************************************************//
-
-	public DoubleDouble round()
-	{
-		DoubleDouble out = new DoubleDouble();
-
-		double rhi = StrictMath.round(this.hi);
-
-		if (this.hi == rhi)
-		{
-			double rlo = StrictMath.round(this.lo);
-			out.hi = rhi + rlo;
-			out.lo = rlo + (rhi - out.hi);
-		}
-		else
-		{
-			if (StrictMath.abs(rhi - this.hi) == 0.5 && this.lo < 0.0)
-			{
-				rhi--;
-			}
-			out.hi = rhi;
-		}
-		return out;
-	}
-
-	public void roundSelf()
-	{
-		double rhi = StrictMath.round(this.hi);
-
-		if (this.hi == rhi)
-		{
-			double rlo = StrictMath.round(this.lo);
-			this.hi = rhi + rlo;
-			this.lo = rlo + (rhi - this.hi);
-		}
-		else
-		{
-			if (StrictMath.abs(rhi - this.hi) == 0.5 && this.lo < 0.0)
-			{
-				rhi--;
-			}
-			this.hi = rhi;
-			this.lo = 0;
-		}
-	}
-
-	public DoubleDouble floor()
-	{
-		DoubleDouble out = new DoubleDouble();
-
-		double rhi = StrictMath.floor(this.hi);
-
-		if (this.hi == rhi)
-		{
-			double rlo = StrictMath.floor(this.lo);
-			out.hi = rhi + rlo;
-			out.lo = rlo + (rhi - out.hi);
-		}
-		else
-		{
-			out.hi = rhi;
-		}
-		return out;
-	}
-
-	public void floorSelf()
-	{
-		double rhi = StrictMath.floor(this.hi);
-
-		if (this.hi == rhi)
-		{
-			double rlo = StrictMath.floor(this.lo);
-			this.hi = rhi + rlo;
-			this.lo = rlo + (rhi - this.hi);
-		}
-		else
-		{
-			this.hi = rhi;
-			this.lo = 0;
-		}
-	}
-
-	public DoubleDouble ceil()
-	{
-		DoubleDouble out = new DoubleDouble();
-
-		double rhi = StrictMath.ceil(this.hi);
-
-		if (this.hi == rhi)
-		{
-			double rlo = StrictMath.ceil(this.lo);
-			out.hi = rhi + rlo;
-			out.lo = rlo + (rhi - out.hi);
-		}
-		else
-		{
-			out.hi = rhi;
-		}
-		return out;
-	}
-
-	public void ceilSelf()
-	{
-		double rhi = StrictMath.ceil(this.hi);
-
-		if (this.hi == rhi)
-		{
-			double rlo = StrictMath.ceil(this.lo);
-			this.hi = rhi + rlo;
-			this.lo = rlo + (rhi - this.hi);
-		}
-		else
-		{
-			this.hi = rhi;
-			this.lo = 0;
-		}
-	}
-
-	public DoubleDouble trunc()
-	{
-		DoubleDouble out = new DoubleDouble();
-
-		double rhi = (long)(this.hi);
-
-		if (this.hi == rhi)
-		{
-			double rlo = (long)(this.lo);
-			out.hi = rhi + rlo;
-			out.lo = rlo + (rhi - out.hi);
-		}
-		else
-		{
-			out.hi = rhi;
-		}
-		return out;
-	}
-
-	public void truncSelf()
-	{
-		double rhi = (long)(this.hi);
-
-		if (this.hi == rhi)
-		{
-			double rlo = (long)(this.lo);
-			this.hi = rhi + rlo;
-			this.lo = rlo + (rhi - this.hi);
-		}
-		else
-		{
-			this.hi = rhi;
-			this.lo = 0;
-		}
-	}
-
-	// ***********************************************************************//
-	// *********************** Calculation functions *************************//
-	// ***********************************************************************//
-
-	public DoubleDouble neg()
-	{
-		return new DoubleDouble(-this.hi, -this.lo);
-	}
-
-	public void negSelf()
-	{
-		this.hi = -this.hi;
-		this.lo = -this.lo;
-	}
-
-	public DoubleDouble abs()
-	{
-		if (this.hi < 0)
-		{
-			return new DoubleDouble(-this.hi, -this.lo);
-		}
-		return new DoubleDouble(this.hi, this.lo);
-	}
-
-	public void absSelf()
-	{
-		if (this.hi < 0)
-		{
-			this.hi = -this.hi;
-			this.lo = -this.lo;
-		}
-	}
-
-	public DoubleDouble add(double y)
-	{
-		double a, b, c;
-		b = this.hi + y;
-		a = this.hi - b;
-		c = ((this.hi - (b + a)) + (y + a)) + this.lo;
-		a = b + c;
-		return new DoubleDouble(a, c + (b - a));
-	}
-
-	public void addSelf(double y)
-	{
-		double a, b;
-		b = this.hi + y;
-		a = this.hi - b;
-		this.lo = ((this.hi - (b + a)) + (y + a)) + this.lo;
-		this.hi = b + this.lo;
-		this.lo += b - this.hi;
-	}
-
-	public DoubleDouble add(DoubleDouble y)
-	{
-		double a, b, c, d, e, f;
-		e = this.hi + y.hi;
-		d = this.hi - e;
-		a = this.lo + y.lo;
-		f = this.lo - a;
-		d = ((this.hi - (d + e)) + (d + y.hi)) + a;
-		b = e + d;
-		c = ((this.lo - (f + a)) + (f + y.lo)) + (d + (e - b));
-		a = b + c;
-		return new DoubleDouble(a, c + (b - a));
-	}
-
-	public void addSelf(DoubleDouble y)
-	{
-		double a, b, c, d, e;
-		a = this.hi + y.hi;
-		b = this.hi - a;
-		c = this.lo + y.lo;
-		d = this.lo - c;
-		b = ((this.hi - (b + a)) + (b + y.hi)) + c;
-		e = a + b;
-		this.lo = ((this.lo - (d + c)) + (d + y.lo)) + (b + (a - e));
-		this.hi = e + this.lo;
-		this.lo += e - this.hi;
-	}
-
-	public DoubleDouble addFast(DoubleDouble y)
-	{
-		double a, b, c;
-		b = this.hi + y.hi;
-		a = this.hi - b;
-		c = ((this.hi - (a + b)) + (a + y.hi)) + (this.lo + y.lo);
-		a = b + c;
-		return new DoubleDouble(a, c + (b - a));
-	}
-
-	public void addSelfFast(DoubleDouble y)
-	{
-		double a, b;
-		b = this.hi + y.hi;
-		a = this.hi - b;
-		this.lo = ((this.hi - (a + b)) + (a + y.hi)) + (this.lo + y.lo);
-		this.hi = b + this.lo;
-		this.lo += b - this.hi;
-	}
-
-	public DoubleDouble sub(double y)
-	{
-		double a, b, c;
-		b = this.hi - y;
-		a = this.hi - b;
-		c = ((this.hi - (a + b)) + (a - y)) + this.lo;
-		a = b + c;
-		return new DoubleDouble(a, c + (b - a));
-	}
-
-	public DoubleDouble subR(double x)
-	{
-		double a, b, c;
-		b = x - this.hi;
-		a = x - b;
-		c = ((x - (a + b)) + (a - this.hi)) - this.lo;
-		a = b + c;
-		return new DoubleDouble(a, c + (b - a));
-	}
-
-	public void subSelf(double y)
-	{
-		double a, b;
-		b = this.hi - y;
-		a = this.hi - b;
-		this.lo = ((this.hi - (a + b)) + (a - y)) + this.lo;
-		this.hi = b + this.lo;
-		this.lo += b - this.hi;
-	}
-
-	public void subRSelf(double x)
-	{
-		double a, b;
-		b = x - this.hi;
-		a = x - b;
-		this.lo = ((x - (a + b)) + (a - this.hi)) - this.lo;
-		this.hi = b + this.lo;
-		this.lo += b - this.hi;
-	}
-
-	public DoubleDouble sub(DoubleDouble y)
-	{
-		double a, b, c, d, e, f, g;
-		g = this.lo - y.lo;
-		f = this.lo - g;
-		e = this.hi - y.hi;
-		d = this.hi - e;
-		d = ((this.hi - (d + e)) + (d - y.hi)) + g;
-		b = e + d;
-		c = (d + (e - b)) + ((this.lo - (f + g)) + (f - y.lo));
-		a = b + c;
-		return new DoubleDouble(a, c + (b - a));
-	}
-
-	public void subSelf(DoubleDouble y)
-	{
-		double a, b, c, d, e;
-		c = this.lo - y.lo;
-		a = this.lo - c;
-		e = this.hi - y.hi;
-		d = this.hi - e;
-		d = ((this.hi - (d + e)) + (d - y.hi)) + c;
-		b = e + d;
-		this.lo = (d + (e - b)) + ((this.lo - (a + c)) + (a - y.lo));
-		this.hi = b + this.lo;
-		this.lo += b - this.hi;
-	}
-
-	public DoubleDouble subR(DoubleDouble y)
-	{
-		double a, b, c, d, e, f, g;
-		g = y.lo - this.lo;
-		f = y.lo - g;
-		e = y.hi - this.hi;
-		d = y.hi - e;
-		d = ((y.hi - (d + e)) + (d - this.hi)) + g;
-		b = e + d;
-		c = (d + (e - b)) + ((y.lo - (f + g)) + (f - this.lo));
-		a = b + c;
-		return new DoubleDouble(a, c + (b - a));
-	}
-
-	public void subRSelf(DoubleDouble y)
-	{
-		double b, d, e, f, g;
-		g = y.lo - this.lo;
-		f = y.lo - g;
-		e = y.hi - this.hi;
-		d = y.hi - e;
-		d = ((y.hi - (d + e)) + (d - this.hi)) + g;
-		b = e + d;
-		this.lo = (d + (e - b)) + ((y.lo - (f + g)) + (f - this.lo));
-		this.hi = b + this.lo;
-		this.lo = this.lo + (b - this.hi);
-	}
-
-	public DoubleDouble subFast(DoubleDouble y)
-	{
-		double a, b, c;
-		b = this.hi - y.hi;
-		a = this.hi - b;
-		c = (((this.hi - (a + b)) + (a - y.hi)) + this.lo) - y.lo;
-		a = b + c;
-		return new DoubleDouble(a, c + (b - a));
-	}
-
-	public void subSelfFast(DoubleDouble y)
-	{
-		double a, b;
-		b = this.hi - y.hi;
-		a = this.hi - b;
-		this.lo = (((this.hi - (a + b)) + (a - y.hi)) + this.lo) - y.lo;
-		this.hi = b + this.lo;
-		this.lo += b - this.hi;
-	}
-
-	public DoubleDouble mulPwrOf2(double y)
-	{
-		return new DoubleDouble(this.hi * y, this.lo * y);
-	}
-
-	public void mulSelfPwrOf2(double y)
-	{
-		this.hi *= y;
-		this.lo *= y;
-	}
-
-	public DoubleDouble mul(double y)
-	{
-		double a, b, c, d, e;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = 0x08000001 * y;
-		c += y - c;
-		d = y - c;
-		e = this.hi * y;
-		c = (((a * c - e) + (a * d + b * c)) + b * d) + this.lo * y;
-		a = e + c;
-		return new DoubleDouble(a, c + (e - a));
-	}
-
-	public void mulSelf(double y)
-	{
-		double a, b, c, d, e;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = 0x08000001 * y;
-		c += y - c;
-		d = y - c;
-		e = this.hi * y;
-		this.lo = (((a * c - e) + (a * d + b * c)) + b * d) + this.lo * y;
-		this.hi = e + this.lo;
-		this.lo += e - this.hi;
-	}
-
-	public DoubleDouble mul(DoubleDouble y)
-	{
-		double a, b, c, d, e;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = 0x08000001 * y.hi;
-		c += y.hi - c;
-		d = y.hi - c;
-		e = this.hi * y.hi;
-		c = (((a * c - e) + (a * d + b * c)) + b * d) + (this.lo * y.hi + this.hi * y.lo);
-		a = e + c;
-		return new DoubleDouble(a, c + (e - a));
-	}
-
-	public void mulSelf(DoubleDouble y)
-	{
-		double a, b, c, d, e;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = 0x08000001 * y.hi;
-		c += y.hi - c;
-		d = y.hi - c;
-		e = this.hi * y.hi;
-		this.lo = (((a * c - e) + (a * d + b * c)) + b * d) + (this.lo * y.hi + this.hi * y.lo);
-		this.hi = e + this.lo;
-		this.lo += e - this.hi;
-	}
-
-	public DoubleDouble divPwrOf2(double y)
-	{
-		return new DoubleDouble(this.hi / y, this.lo / y);
-	}
-
-	public void divSelfPwrOf2(double y)
-	{
-		this.hi /= y;
-		this.lo /= y;
-	}
-
-	public DoubleDouble div(double y)
-	{
-		double a, b, c, d, e, f, g, h;
-		f = this.hi / y;
-		a = 0x08000001 * f;
-		a += f - a;
-		b = f - a;
-		c = 0x08000001 * y;
-		c += y - c;
-		d = y - c;
-		e = f * y;
-		g = this.hi - e;
-		h = this.hi - g;
-		b = (g + ((((this.hi - (h + g)) + (h - e)) + this.lo) - (((a * c - e) + (a * d + b * c)) + b * d))) / y;
-		a = f + b;
-		return new DoubleDouble(a, b + (f - a));
-	}
-
-	public void divSelf(double y)
-	{
-		double a, b, c, d, e, f, g, h;
-		f = this.hi / y;
-		a = 0x08000001 * f;
-		a += f - a;
-		b = f - a;
-		c = 0x08000001 * y;
-		c += y - c;
-		d = y - c;
-		e = f * y;
-		g = this.hi - e;
-		h = this.hi - g;
-		this.lo = (g + ((((this.hi - (h + g)) + (h - e)) + this.lo) - (((a * c - e) + (a * d + b * c)) + b * d))) / y;
-		this.hi = f + this.lo;
-		this.lo += f - this.hi;
-	}
-
-	public DoubleDouble divr(double y)
-	{
-		double a, b, c, d, e, f;
-		f = y / this.hi;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = 0x08000001 * f;
-		c += f - c;
-		d = f - c;
-		e = this.hi * f;
-		b = ((y - e) - ((((a * c - e) + (a * d + b * c)) + b * d) + this.lo * f)) / this.hi;
-		a = f + b;
-		return new DoubleDouble(a, b + (f - a));
-	}
-
-	public void divrSelf(double y)
-	{
-		double a, b, c, d, e, f;
-		f = y / this.hi;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = 0x08000001 * f;
-		c += f - c;
-		d = f - c;
-		e = this.hi * f;
-		this.lo = ((y - e) - ((((a * c - e) + (a * d + b * c)) + b * d) + this.lo * f)) / this.hi;
-		this.hi = f + this.lo;
-		this.lo += f - this.hi;
-	}
-
-	public DoubleDouble div(DoubleDouble y)
-	{
-		double a, b, c, d, e, f, g;
-		f = this.hi / y.hi;
-		a = 0x08000001 * y.hi;
-		a += y.hi - a;
-		b = y.hi - a;
-		c = 0x08000001 * f;
-		c += f - c;
-		d = f - c;
-		e = y.hi * f;
-		c = (((a * c - e) + (a * d + b * c)) + b * d) + y.lo * f;
-		b = this.lo - c;
-		d = this.lo - b;
-		a = this.hi - e;
-		e = (this.hi - ((this.hi - a) + a)) + b;
-		g = a + e;
-		e += (a - g) + ((this.lo - (d + b)) + (d - c));
-		a = g + e;
-		b = a / y.hi;
-		f += (e + (g - a)) / y.hi;
-		a = f + b;
-		return new DoubleDouble(a, b + (f - a));
-	}
-
-	public void divSelf(DoubleDouble y)
-	{
-		double a, b, c, d, e, f, g;
-		f = this.hi / y.hi;
-		a = 0x08000001 * y.hi;
-		a += y.hi - a;
-		b = y.hi - a;
-		c = 0x08000001 * f;
-		c += f - c;
-		d = f - c;
-		e = y.hi * f;
-		c = (((a * c - e) + (a * d + b * c)) + b * d) + y.lo * f;
-		b = this.lo - c;
-		d = this.lo - b;
-		a = this.hi - e;
-		e = (this.hi - ((this.hi - a) + a)) + b;
-		g = a + e;
-		e += (a - g) + ((this.lo - (d + b)) + (d - c));
-		a = g + e;
-		this.lo = a / y.hi;
-		f += (e + (g - a)) / y.hi;
-		this.hi = f + this.lo;
-		this.lo += f - this.hi;
-	}
-
-	public DoubleDouble divFast(DoubleDouble y)
-	{
-		double a, b, c, d, e, f, g;
-		f = this.hi / y.hi;
-		a = 0x08000001 * y.hi;
-		a += y.hi - a;
-		b = y.hi - a;
-		c = 0x08000001 * f;
-		c += f - c;
-		d = f - c;
-		e = y.hi * f;
-		b = (((a * c - e) + (a * d + b * c)) + b * d) + y.lo * f;
-		a = e + b;
-		c = this.hi - a;
-		g = (c + ((((this.hi - c) - a) - ((e - a) + b)) + this.lo)) / y.hi;
-		a = f + g;
-		return new DoubleDouble(a, g + (f - a));
-	}
-
-	public void divSelfFast(DoubleDouble y)
-	{
-		double a, b, c, d, e, f;
-		f = this.hi / y.hi;
-		a = 0x08000001 * y.hi;
-		a += y.hi - a;
-		b = y.hi - a;
-		c = 0x08000001 * f;
-		c += f - c;
-		d = f - c;
-		e = y.hi * f;
-		b = (((a * c - e) + (a * d + b * c)) + b * d) + y.lo * f;
-		a = e + b;
-		c = this.hi - a;
-		this.lo = (c + ((((this.hi - c) - a) - ((e - a) + b)) + this.lo)) / y.hi;
-		this.hi = f + this.lo;
-		this.lo += f - this.hi;
-	}
-
-	public DoubleDouble recip()
-	{
-		double a, b, c, d, e, f;
-		f = 1 / this.hi;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = 0x08000001 * f;
-		c += f - c;
-		d = f - c;
-		e = this.hi * f;
-		b = ((1 - e) - ((((a * c - e) + (a * d + b * c)) + b * d) + this.lo * f)) / this.hi;
-		a = f + b;
-		return new DoubleDouble(a, b + (f - a));
-	}
-
-	public void recipSelf()
-	{
-		double a, b, c, d, e, f;
-		f = 1 / this.hi;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = 0x08000001 * f;
-		c += f - c;
-		d = f - c;
-		e = this.hi * f;
-		this.lo = ((1 - e) - ((((a * c - e) + (a * d + b * c)) + b * d) + this.lo * f)) / this.hi;
-		this.hi = f + this.lo;
-		this.lo += f - this.hi;
-	}
-
-	public DoubleDouble sqr()
-	{
-		double a, b, c;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = this.hi * this.hi;
-		b = ((((a * a - c) + a * b * 2) + b * b) + this.hi * this.lo * 2) + this.lo * this.lo;
-		a = b + c;
-		return new DoubleDouble(a, b + (c - a));
-	}
-
-	public void sqrSelf()
-	{
-		double a, b, c;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = this.hi - a;
-		c = this.hi * this.hi;
-		this.lo = ((((a * a - c) + a * b * 2) + b * b) + this.hi * this.lo * 2) + this.lo * this.lo;
-		this.hi = c + this.lo;
-		this.lo += c - this.hi;
-	}
-
-	public DoubleDouble sqrt()
-	{
-		if (this.hi == 0 && this.lo == 0)
-		{
-			return new DoubleDouble();
-		}
-
-		double a, b, c, d, e, f, g, h;
-		g = 1 / StrictMath.sqrt(this.hi);
-		h = this.hi * g;
-		g *= 0.5;
-		a = 0x08000001 * h;
-		a += h - a;
-		b = h - a;
-		c = h * h;
-		b = ((a * a - c) + a * b * 2) + b * b;
-		a = this.lo - b;
-		f = this.lo - a;
-		e = this.hi - c;
-		d = this.hi - e;
-		d = ((this.hi - (d + e)) + (d - c)) + a;
-		c = e + d;
-		b = (d + (e - c)) + ((this.lo - (f + a)) + (f - b));
-		a = c + b;
-		b += (c - a);
-		c = 0x08000001 * a;
-		c += a - c;
-		d = a - c;
-		e = 0x08000001 * g;
-		e += g - e;
-		f = g - e;
-		a = a * g;
-		e = ((c * e - a) + (c * f + d * e)) + d * f;
-		e += b * g;
-		b = a + e;
-		e += a - b;
-		f = b + h;
-		c = b - f;
-		return new DoubleDouble(f, e + ((b - (f + c)) + (h + c)));
-	}
-
-	public void sqrtSelf()
-	{
-		if (this.hi == 0 && this.lo == 0)
-		{
-			return;
-		}
-
-		double a, b, c, d, e, f, g, h;
-		g = 1 / StrictMath.sqrt(this.hi);
-		h = this.hi * g;
-		g *= 0.5;
-		a = 0x08000001 * h;
-		a += h - a;
-		b = h - a;
-		c = h * h;
-		b = ((a * a - c) + a * b * 2) + b * b;
-		a = this.lo - b;
-		f = this.lo - a;
-		e = this.hi - c;
-		d = this.hi - e;
-		d = ((this.hi - (d + e)) + (d - c)) + a;
-		c = e + d;
-		b = (d + (e - c)) + ((this.lo - (f + a)) + (f - b));
-		a = c + b;
-		b += (c - a);
-		c = 0x08000001 * a;
-		c += a - c;
-		d = a - c;
-		e = 0x08000001 * g;
-		e += g - e;
-		f = g - e;
-		a = a * g;
-		e = ((c * e - a) + (c * f + d * e)) + d * f;
-		e += b * g;
-		b = a + e;
-		e += a - b;
-		this.hi = b + h;
-		c = b - this.hi;
-		this.lo = e + ((b - (this.hi + c)) + (h + c));
-	}
-
-	public DoubleDouble sqrtFast()
-	{
-		if (this.hi == 0 && this.lo == 0)
-		{
-			return new DoubleDouble();
-		}
-
-		double a, b, c, d, e;
-		d = 1 / StrictMath.sqrt(this.hi);
-		e = this.hi * d;
-		a = 0x08000001 * e;
-		a += e - a;
-		b = e - a;
-		c = e * e;
-		b = ((a * a - c) + a * b * 2) + b * b;
-		a = this.hi - c;
-		c = this.hi - a;
-		c = (a + ((((this.hi - (c + a)) + (c - c)) + this.lo) - b)) * d * 0.5;
-		a = e + c;
-		b = e - a;
-		return new DoubleDouble(a, (e - (b + a)) + (b + c));
-	}
-
-	public void sqrtSelfFast()
-	{
-		if (this.hi == 0 && this.lo == 0)
-		{
-			return;
-		}
-
-		double a, b, c, d, e;
-		d = 1 / StrictMath.sqrt(this.hi);
-		e = this.hi * d;
-		a = 0x08000001 * e;
-		a += e - a;
-		b = e - a;
-		c = e * e;
-		b = ((a * a - c) + a * b * 2) + b * b;
-		a = this.hi - c;
-		c = this.hi - a;
-		c = (a + ((((this.hi - (c + a)) + (c - c)) + this.lo) - b)) * d * 0.5;
-		this.hi = e + c;
-		b = e - this.hi;
-		this.lo = (e - (b + this.hi)) + (b + c);
-	}
-
-	// Devil's values:
-	// 0.693147180559945309417232121458174
-	// 1.03972077083991796412584818218727
-	// 1.03972077083991796312584818218727
-	public DoubleDouble exp()
-	{
-		if (this.hi > 691.067739)
-		{
-			return new DoubleDouble(Double.POSITIVE_INFINITY);
-		}
-
-		double a, b, c, d, e, f, g = 0.5, h = 0, i, j, k, l, m, n, o, p, q = 2, r = 1;
-		int s;
-
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = a - this.hi;
-		c = this.hi * 1.4426950408889634;
-		b = (((a * 1.4426950514316559 - c) - (b * 1.4426950514316559 + a * 1.0542692496784412E-8)) + b * 1.0542692496784412E-8)
-				+ (this.lo * 1.4426950408889634 + this.hi * 2.0355273740931033E-17);
-		s = (int)StrictMath.round(c);
-		if (c == s)
-		{
-			s += (int)StrictMath.round(b);
-		}
-		else if (StrictMath.abs(s - c) == 0.5 && b < 0.0)
-		{
-			s--;
-		}
-		e = 0.6931471805599453 * s;
-		c = ((s * 0.6931471824645996 - e) - (s * 1.904654323148236E-9)) + 2.3190468138462996E-17 * s;
-		b = this.lo - c;
-		d = this.lo - b;
-		e = this.hi - e;
-		a = e + b;
-		b = ((this.lo - (d + b)) + (d - c)) + (b + (e - a));
-		e = a + 1;
-		c = a - e;
-		d = ((a - (e + c)) + (1 + c)) + b;
-		c = e + d;
-		d += e - c;
-		e = 0x08000001 * a;
-		e += a - e;
-		f = a - e;
-		i = a * a;
-		f = ((e * e - i) + e * f * 2) + f * f;
-		f += a * b * 2;
-		f += b * b;
-		e = f + i;
-		f += i - e;
-		i = e * g;
-		j = f * g;
-		do
-		{
-			k = d + j;
-			l = d - k;
-			m = c + i;
-			n = c - m;
-			n = ((c - (n + m)) + (n + i)) + k;
-			o = m + n;
-			d = (n + (m - o)) + ((d - (l + k)) + (l + j));
-			c = o + d;
-			d += o - c;
-			k = 0x08000001 * e;
-			k += e - k;
-			l = e - k;
-			m = 0x08000001 * a;
-			m += a - m;
-			n = a - m;
-			o = e * a;
-			f = (((k * m - o) + (k * n + l * m)) + l * n) + (f * a + e * b);
-			e = o + f;
-			f += o - e;
-			n = g / ++q;
-			k = 0x08000001 * n;
-			k += n - k;
-			l = n - k;
-			m = n * q;
-			o = g - m;
-			p = g - o;
-			h = (o + ((((g - (p + o)) + (p - m)) + h) - (((k * q - m) + l * q)))) / q;
-			g = n;
-			i = 0x08000001 * e;
-			i += e - i;
-			k = e - i;
-			j = 0x08000001 * g;
-			j += g - j;
-			l = g - j;
-			m = e * g;
-			j = (((i * j - m) + (i * l + k * j)) + k * l) + (f * g + e * h);
-			i = m + j;
-			j += m - i;
-		} while (i > 1e-40 || i < -1e-40);
-		if (s < 0)
-		{
-			s = -s;
-			a = 0.5;
-		}
-		else
-		{
-			a = 2;
-		}
-		while (s > 0)
-		{
-			if ((s & 1) > 0)
-			{
-				r *= a;
-			}
-			a *= a;
-			s >>= 1;
-		}
-		a = d + j;
-		b = d - a;
-		e = c + i;
-		f = c - e;
-		f = ((c - (f + e)) + (f + i)) + a;
-		c = e + f;
-		d = (f + (e - c)) + ((d - (b + a)) + (b + j));
-		return new DoubleDouble(c * r, d * r);
-	}
-
-	public void expSelf()
-	{
-		if (this.hi > 691.067739)
-		{
-			this.hi = Double.POSITIVE_INFINITY;
-			return;
-		}
-
-		double a, b, c, d, e, f, g = 0.5, h = 0, i, j, k, l, m, n, o, p, q = 2, r = 1;
-		int s;
-
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		b = a - this.hi;
-		c = this.hi * 1.4426950408889634;
-		b = (((a * 1.4426950514316559 - c) - (b * 1.4426950514316559 + a * 1.0542692496784412E-8)) + b * 1.0542692496784412E-8)
-				+ (this.lo * 1.4426950408889634 + this.hi * 2.0355273740931033E-17);
-		s = (int)StrictMath.round(c);
-		if (c == s)
-		{
-			s += (int)StrictMath.round(b);
-		}
-		else if (StrictMath.abs(s - c) == 0.5 && b < 0.0)
-		{
-			s--;
-		}
-		e = 0.6931471805599453 * s;
-		c = ((s * 0.6931471824645996 - e) - (s * 1.904654323148236E-9)) + 2.3190468138462996E-17 * s;
-		b = this.lo - c;
-		d = this.lo - b;
-		e = this.hi - e;
-		a = e + b;
-		b = ((b + (e - a)) + ((this.lo - (d + b)) + (d - c)));
-		e = a + 1;
-		c = a - e;
-		d = ((a - (e + c)) + (1 + c)) + b;
-		c = e + d;
-		d += e - c;
-		e = 0x08000001 * a;
-		e += a - e;
-		f = a - e;
-		i = a * a;
-		f = ((e * e - i) + e * f * 2) + f * f;
-		f += a * b * 2;
-		f += b * b;
-		e = f + i;
-		f += i - e;
-		i = e * g;
-		j = f * g;
-		do
-		{
-			k = d + j;
-			l = d - k;
-			m = c + i;
-			n = c - m;
-			n = ((c - (n + m)) + (n + i)) + k;
-			o = m + n;
-			d = (n + (m - o)) + ((d - (l + k)) + (l + j));
-			c = o + d;
-			d += o - c;
-			k = 0x08000001 * e;
-			k += e - k;
-			l = e - k;
-			m = 0x08000001 * a;
-			m += a - m;
-			n = a - m;
-			o = e * a;
-			f = (((k * m - o) + (k * n + l * m)) + l * n) + (f * a + e * b);
-			e = o + f;
-			f += o - e;
-			n = g / ++q;
-			k = 0x08000001 * n;
-			k += n - k;
-			l = n - k;
-			m = n * q;
-			o = g - m;
-			p = g - o;
-			h = (o + ((((g - (p + o)) + (p - m)) + h) - (((k * q - m) + l * q)))) / q;
-			g = n;
-			i = 0x08000001 * e;
-			i += e - i;
-			k = e - i;
-			j = 0x08000001 * g;
-			j += g - j;
-			l = g - j;
-			m = e * g;
-			j = (((i * j - m) + (i * l + k * j)) + k * l) + (f * g + e * h);
-			i = m + j;
-			j += m - i;
-		} while (i > 1e-40 || i < -1e-40);
-		if (s < 0)
-		{
-			s = -s;
-			a = 0.5;
-		}
-		else
-		{
-			a = 2;
-		}
-		while (s > 0)
-		{
-			if ((s & 1) > 0)
-			{
-				r *= a;
-			}
-			a *= a;
-			s >>= 1;
-		}
-		a = d + j;
-		b = d - a;
-		e = c + i;
-		f = c - e;
-		f = ((c - (f + e)) + (f + i)) + a;
-		this.hi = e + f;
-		this.lo = ((f + (e - this.hi)) + ((d - (b + a)) + (b + j))) * r;
-		this.hi *= r;
-	}
-
-	public DoubleDouble log()
-	{
-		if (this.hi <= 0.0)
-		{
-			return new DoubleDouble(Double.NaN);
-		}
-
-		double a, b, c, d, e, f, g = 0.5, h = 0, i, j, k, l, m, n, o, p, q = 2, r = 1, s;
-		int t;
-
-		s = StrictMath.log(this.hi);
-
-		a = 0x08000001 * s;
-		a += s + a;
-		b = s - a;
-		c = s * -1.4426950408889634;
-		b = (((a * -1.4426950514316559 - c) + (a * 1.0542692496784412E-8 - b * 1.4426950514316559)) + b * 1.0542692496784412E-8) - (s * 2.0355273740931033E-17);
-		t = (int)StrictMath.round(c);
-		if (a == t)
-		{
-			t += (int)StrictMath.round(b);
-		}
-		else if (StrictMath.abs(t - a) == 0.5 && b < 0.0)
-		{
-			t--;
-		}
-		e = 0.6931471805599453 * t;
-		c = ((t * 0.6931471824645996 - e) - (t * 1.904654323148236E-9)) + 2.3190468138462996E-17 * t;
-		e += s;
-		a = e + c;
-		b = (a - e) - c;
-		e = 1 - a;
-		d = ((1 - e) - a) + b;
-		c = e + d;
-		d += e - c;
-		e = 0x08000001 * -a;
-		e -= a + e;
-		f = a + e;
-		i = a * a;
-		f = ((e * e - i) - e * f * 2) + f * f;
-		f += -a * b * 2;
-		a = -a;
-		f += b * b;
-		e = f + i;
-		f += i - e;
-		l = 0x08000001 * e;
-		l += e - l;
-		k = e - l;
-		i = e * g;
-		j = f * g;
-		do
-		{
-			k = d + j;
-			l = d - k;
-			m = c + i;
-			n = c - m;
-			n = ((c - (n + m)) + (n + i)) + k;
-			o = m + n;
-			d = (n + (m - o)) + ((d - (l + k)) + (l + j));
-			c = o + d;
-			d += o - c;
-			k = 0x08000001 * e;
-			k += e - k;
-			l = e - k;
-			m = 0x08000001 * a;
-			m += a - m;
-			n = a - m;
-			o = e * a;
-			f = (((k * m - o) + (k * n + l * m)) + l * n) + (f * a + e * b);
-			e = o + f;
-			f += o - e;
-			n = g / ++q;
-			k = 0x08000001 * n;
-			k += n - k;
-			l = n - k;
-			m = n * q;
-			o = g - m;
-			p = g - o;
-			h = (o + ((((g - (p + o)) + (p - m)) + h) - (((k * q - m) + l * q)))) / q;
-			g = n;
-			i = 0x08000001 * e;
-			i += e - i;
-			k = e - i;
-			j = 0x08000001 * g;
-			j += g - j;
-			l = g - j;
-			m = e * g;
-			j = (((i * j - m) + (i * l + k * j)) + k * l) + (f * g + e * h);
-			i = m + j;
-			j += m - i;
-		} while (i > 1e-40 || i < -1e-40);
-		if (t < 0)
-		{
-			t = -t;
-			k = 0.5;
-		}
-		else
-		{
-			k = 2;
-		}
-		while (t > 0)
-		{
-			if ((t & 1) > 0)
-			{
-				r *= k;
-			}
-			k *= k;
-			t >>= 1;
-		}
-		a = d + j;
-		b = d - a;
-		e = c + i;
-		f = c - e;
-		f = ((c - (f + e)) + (f + i)) + a;
-		g = e + f;
-		h = ((f + (e - g)) + ((d - (b + a)) + (b + j))) * r;
-		g *= r;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		c = this.hi - a;
-		b = 0x08000001 * g;
-		b += g - b;
-		d = g - b;
-		e = this.hi * g;
-		b = (((a * b - e) + (a * d + c * b)) + c * d) + (this.lo * g + this.hi * h);
-		a = --e + b;
-		b += e - a;
-		c = a + s;
-		d = a - c;
-		b += ((a - (c + d)) + (s + d));
-		a = c + b;
-		return new DoubleDouble(a, b + (c - a));
-	}
-
-	public void logSelf()
-	{
-		if (this.hi <= 0.0)
-		{
-			this.hi = Double.NaN;
-			return;
-		}
-
-		double a, b, c, d, e, f, g = 0.5, h = 0, i, j, k, l, m, n, o, p, q = 2, r = 1, s;
-		int t;
-
-		s = StrictMath.log(this.hi);
-
-		a = 0x08000001 * s;
-		a += s + a;
-		b = s - a;
-		c = s * -1.4426950408889634;
-		b = (((a * -1.4426950514316559 - c) + (a * 1.0542692496784412E-8 - b * 1.4426950514316559)) + b * 1.0542692496784412E-8) - (s * 2.0355273740931033E-17);
-		t = (int)StrictMath.round(c);
-		if (c == t)
-		{
-			t += (int)StrictMath.round(b);
-		}
-		else if (StrictMath.abs(t + c) == 0.5 && b < 0.0)
-		{
-			t--;
-		}
-		e = 0.6931471805599453 * t;
-		c = ((t * 0.6931471824645996 - e) - (t * 1.904654323148236E-9)) + 2.3190468138462996E-17 * t;
-		e += s;
-		a = e + c;
-		b = (a - e) - c;
-		e = 1 - a;
-		d = ((1 - e) - a) + b;
-		c = e + d;
-		d += e - c;
-		e = 0x08000001 * -a;
-		e -= a + e;
-		f = a + e;
-		i = a * a;
-		f = ((e * e - i) - e * f * 2) + f * f;
-		f += -a * b * 2;
-		a = -a;
-		f += b * b;
-		e = f + i;
-		f += i - e;
-		l = 0x08000001 * e;
-		l += e - l;
-		k = e - l;
-		i = e * g;
-		j = f * g;
-		do
-		{
-			k = d + j;
-			l = d - k;
-			m = c + i;
-			n = c - m;
-			n = ((c - (n + m)) + (n + i)) + k;
-			o = m + n;
-			d = (n + (m - o)) + ((d - (l + k)) + (l + j));
-			c = o + d;
-			d += o - c;
-			k = 0x08000001 * e;
-			k += e - k;
-			l = e - k;
-			m = 0x08000001 * a;
-			m += a - m;
-			n = a - m;
-			o = e * a;
-			f = (((k * m - o) + (k * n + l * m)) + l * n) + (f * a + e * b);
-			e = o + f;
-			f += o - e;
-			n = g / ++q;
-			k = 0x08000001 * n;
-			k += n - k;
-			l = n - k;
-			m = n * q;
-			o = g - m;
-			p = g - o;
-			h = (o + ((((g - (p + o)) + (p - m)) + h) - (((k * q - m) + l * q)))) / q;
-			g = n;
-			i = 0x08000001 * e;
-			i += e - i;
-			k = e - i;
-			j = 0x08000001 * g;
-			j += g - j;
-			l = g - j;
-			m = e * g;
-			j = (((i * j - m) + (i * l + k * j)) + k * l) + (f * g + e * h);
-			i = m + j;
-			j += m - i;
-		} while (i > 1e-40 || i < -1e-40);
-		if (t < 0)
-		{
-			t = -t;
-			k = 0.5;
-		}
-		else
-		{
-			k = 2;
-		}
-		while (t > 0)
-		{
-			if ((t & 1) > 0)
-			{
-				r *= k;
-			}
-			k *= k;
-			t >>= 1;
-		}
-		a = d + j;
-		b = d - a;
-		e = c + i;
-		f = c - e;
-		f = ((c - (f + e)) + (f + i)) + a;
-		g = e + f;
-		h = ((f + (e - g)) + ((d - (b + a)) + (b + j))) * r;
-		g *= r;
-		a = 0x08000001 * this.hi;
-		a += this.hi - a;
-		c = this.hi - a;
-		b = 0x08000001 * g;
-		b += g - b;
-		d = g - b;
-		e = this.hi * g;
-		this.lo = (((a * b - e) + (a * d + c * b)) + c * d) + (this.lo * g + this.hi * h);
-		a = --e + this.lo;
-		this.lo += e - a;
-		c = a + s;
-		d = a - c;
-		this.lo += ((a - (c + d)) + (s + d));
-		this.hi = c + this.lo;
-		this.lo += c - this.hi;
-	}
-
-	public static double powOf2(int y)
-	{
-		return ((long)y + 0xFF) << 52;
-	}
-
-	public DoubleDouble pow(int y)
-	{
-		DoubleDouble temp;
-		int e = y;
-		if (e < 0)
-		{
-			e = -y;
-		}
-		temp = new DoubleDouble(this.hi, this.lo);
-		DoubleDouble prod = new DoubleDouble(1);
-		while (e > 0)
-		{
-			if ((e & 1) > 0)
-			{
-				prod.mulSelf(temp);
-			}
-			temp.sqrSelf();
-			e >>= 1;
-		}
-		if (y < 0)
-		{
-			return prod.recip();
-		}
-		return prod;
-	}
-
-	public void powSelf(int y)
-	{
-		DoubleDouble temp;
-		int e = y;
-		if (e < 0)
-		{
-			e = -y;
-		}
-		temp = new DoubleDouble(this.hi, this.lo);
-		this.hi = 1;
-		this.lo = 0;
-		while (e > 0)
-		{
-			if ((e & 1) > 0)
-			{
-				this.mulSelf(temp);
-			}
-			temp.sqrSelf();
-			e >>= 1;
-		}
-		if (y < 0)
-		{
-			this.recipSelf();
-		}
-	}
-
-	public DoubleDouble pow(double y)
-	{
-		return this.log().mul(y).exp();
-	}
-
-	public void powSelf(double y)
-	{
-		this.logSelf();
-		this.mulSelf(y);
-		this.expSelf();
-	}
-
-	public DoubleDouble pow(DoubleDouble y)
-	{
-		return this.log().mul(y).exp();
-	}
-
-	public void powSelf(DoubleDouble y)
-	{
-		this.logSelf();
-		this.mulSelf(y);
-		this.expSelf();
-	}
-
-	public DoubleDouble root(int y)
-	{
-		if (this.hi == 0 && this.lo == 0)
-		{
-			return new DoubleDouble();
-		}
-		if (this.hi < 0.0 && ((y & 1) == 0))
-		{
-			return new DoubleDouble(Double.NaN);
-		}
-
-		if (y == 1)
-		{
-			return this;
-		}
-		if (y == 2)
-		{
-			double a, b, c, d, e, f, g, h;
-			g = 1 / StrictMath.sqrt(this.hi);
-			h = this.hi * g;
-			g *= 0.5;
-			a = 0x08000001 * h;
-			a += h - a;
-			b = h - a;
-			c = h * h;
-			b = ((a * a - c) + a * b * 2) + b * b;
-			a = this.lo - b;
-			f = this.lo - a;
-			e = this.hi - c;
-			d = this.hi - e;
-			d = ((this.hi - (d + e)) + (d - c)) + a;
-			c = e + d;
-			b = (d + (e - c)) + ((this.lo - (f + a)) + (f - b));
-			a = c + b;
-			b += (c - a);
-			c = 0x08000001 * a;
-			c += a - c;
-			d = a - c;
-			e = 0x08000001 * g;
-			e += g - e;
-			f = g - e;
-			a = a * g;
-			e = ((c * e - a) + (c * f + d * e)) + d * f;
-			e += b * g;
-			b = a + e;
-			e += a - b;
-			f = b + h;
-			c = b - f;
-			return new DoubleDouble(f, e + ((b - (f + c)) + (h + c)));
-		}
-
-		double a, b, c, d, e, f, g, h, i, j, k, l, m;
-		int z;
-
-		if (this.hi < 0)
-		{
-			b = -this.hi;
-			c = -this.lo;
-		}
-		else
-		{
-			b = this.hi;
-			c = this.lo;
-		}
-
-		a = StrictMath.exp(StrictMath.log(b) / (-y));
-
-		z = y;
-		k = a;
-		l = 0;
-		g = 1;
-		h = 0;
-		while (z > 0)
-		{
-			if ((z & 1) > 0)
-			{
-				d = 0x08000001 * g;
-				d += g - d;
-				e = g - d;
-				f = 0x08000001 * k;
-				f += k - f;
-				i = k - f;
-				j = g * k;
-				h = (((d * f - j) + (d * i + e * f)) + e * i) + (h * k + g * l);
-				g = j + h;
-				h += j - g;
-			}
-			f = 0x08000001 * k;
-			f = f + (k - f);
-			i = k - f;
-			j = k * k;
-			i = ((f * f - j) + f * i * 2) + i * i;
-			i += k * l * 2;
-			i += l * l;
-			k = i + j;
-			l = i + (j - k);
-			z >>= 1;
-		}
-
-		l = 0x08000001 * b;
-		l += b - l;
-		m = b - l;
-		d = 0x08000001 * g;
-		d += g - d;
-		e = g - d;
-		f = b * g;
-		d = (((l * d - f) + (l * e + m * d)) + m * e) + (c * g + b * h);
-		e = 1 - f;
-		l = e - d;
-		m = (e - l) - d;
-		d = 0x08000001 * l;
-		d += l - d;
-		e = l - d;
-		f = 0x08000001 * a;
-		f += a - f;
-		g = a - f;
-		l *= a;
-		m *= a;
-		m += (((d * f - l) + (d * g + e * f)) + e * g);
-		d = l / y;
-		e = 0x08000001 * d;
-		e += d - e;
-		f = d - e;
-		g = 0x08000001 * y;
-		g += y - g;
-		h = y - g;
-		i = d * y;
-		j = l - i;
-		k = l - j;
-		m = (j + ((((l - (k + j)) + (k - i)) + m) - (((e * g - i) + (e * h + f * g)) + f * h))) / y;
-		e = d + a;
-		l = d - e;
-		m += (d - (e + l)) + (a + l);
-		if (this.hi < 0.0)
-		{
-			e = -e;
-			m = -m;
-		}
-		i = 1 / e;
-		l = 0x08000001 * e;
-		l += e - l;
-		d = e - l;
-		f = 0x08000001 * i;
-		f += i - f;
-		g = i - f;
-		h = e * i;
-		m = ((1 - h) - ((((l * f - h) + (l * g + d * f)) + d * g) + m * i)) / e;
-		l = i + m;
-		return new DoubleDouble(l, m + (i - l));
-	}
-
-	public void rootSelf(int y)
-	{
-		if (this.hi == 0 && this.lo == 0)
-		{
-			return;
-		}
-		if (this.hi < 0.0 && ((y & 1) == 0))
-		{
-			this.hi = Double.NaN;
-			return;
-		}
-
-		if (y == 1)
-		{
-			return;
-		}
-		if (y == 2)
-		{
-			double a, b, c, d, e, f, g, h;
-			g = 1 / StrictMath.sqrt(this.hi);
-			h = this.hi * g;
-			g *= 0.5;
-			a = 0x08000001 * h;
-			a += h - a;
-			b = h - a;
-			c = h * h;
-			b = ((a * a - c) + a * b * 2) + b * b;
-			a = this.lo - b;
-			f = this.lo - a;
-			e = this.hi - c;
-			d = this.hi - e;
-			d = ((this.hi - (d + e)) + (d - c)) + a;
-			c = e + d;
-			b = (d + (e - c)) + ((this.lo - (f + a)) + (f - b));
-			a = c + b;
-			b += (c - a);
-			c = 0x08000001 * a;
-			c += a - c;
-			d = a - c;
-			e = 0x08000001 * g;
-			e += g - e;
-			f = g - e;
-			a = a * g;
-			e = ((c * e - a) + (c * f + d * e)) + d * f;
-			e += b * g;
-			b = a + e;
-			e += a - b;
-			this.hi = b + h;
-			c = b - this.hi;
-			this.lo = e + ((b - (this.hi + c)) + (h + c));
-			return;
-		}
-
-		double a, b, c, d, e, f, g, h, i, j, k, l, m;
-		int z;
-
-		if (this.hi < 0)
-		{
-			b = -this.hi;
-			c = -this.lo;
-		}
-		else
-		{
-			b = this.hi;
-			c = this.lo;
-		}
-
-		a = StrictMath.exp(StrictMath.log(b) / (-y));
-
-		z = y;
-		k = a;
-		l = 0;
-		g = 1;
-		h = 0;
-		while (z > 0)
-		{
-			if ((z & 1) > 0)
-			{
-				d = 0x08000001 * g;
-				d += g - d;
-				e = g - d;
-				f = 0x08000001 * k;
-				f += k - f;
-				i = k - f;
-				j = g * k;
-				h = (((d * f - j) + (d * i + e * f)) + e * i) + (h * k + g * l);
-				g = j + h;
-				h += j - g;
-			}
-			f = 0x08000001 * k;
-			f = f + (k - f);
-			i = k - f;
-			j = k * k;
-			i = ((f * f - j) + f * i * 2) + i * i;
-			i += k * l * 2;
-			i += l * l;
-			k = i + j;
-			l = i + (j - k);
-			z >>= 1;
-		}
-
-		l = 0x08000001 * b;
-		l += b - l;
-		m = b - l;
-		d = 0x08000001 * g;
-		d += g - d;
-		e = g - d;
-		f = b * g;
-		d = (((l * d - f) + (l * e + m * d)) + m * e) + (c * g + b * h);
-		e = 1 - f;
-		l = e - d;
-		m = (e - l) - d;
-		d = 0x08000001 * l;
-		d += l - d;
-		e = l - d;
-		f = 0x08000001 * a;
-		f += a - f;
-		g = a - f;
-		l *= a;
-		m *= a;
-		m += (((d * f - l) + (d * g + e * f)) + e * g);
-		d = l / y;
-		e = 0x08000001 * d;
-		e += d - e;
-		f = d - e;
-		g = 0x08000001 * y;
-		g += y - g;
-		h = y - g;
-		i = d * y;
-		j = l - i;
-		k = l - j;
-		m = (j + ((((l - (k + j)) + (k - i)) + m) - (((e * g - i) + (e * h + f * g)) + f * h))) / y;
-		e = d + a;
-		l = d - e;
-		m += (d - (e + l)) + (a + l);
-		if (this.hi < 0.0)
-		{
-			e = -e;
-			m = -m;
-		}
-		i = 1 / e;
-		l = 0x08000001 * e;
-		l += e - l;
-		d = e - l;
-		f = 0x08000001 * i;
-		f += i - f;
-		g = i - f;
-		h = e * i;
-		m = ((1 - h) - ((((l * f - h) + (l * g + d * f)) + d * g) + m * i)) / e;
-		l = i + m;
-		this.hi = l;
-		this.lo = m + (i - l);
-	}
-
-	public DoubleDouble root(double y)
-	{
-		return this.log().div(y).exp();
-	}
-
-	public void rootSelf(double y)
-	{
-		this.logSelf();
-		this.divSelf(y);
-		this.expSelf();
-	}
-
-	public DoubleDouble rootr(double y)
-	{
-		return this.divr(StrictMath.log(y)).exp();
-	}
-
-	public void rootrSelf(double y)
-	{
-		this.divrSelf(StrictMath.log(y));
-		this.expSelf();
-	}
-
-	public DoubleDouble root(DoubleDouble y)
-	{
-		return this.log().div(y).exp();
-	}
-
-	public void rootSelf(DoubleDouble y)
-	{
-		this.logSelf();
-		this.divSelf(y);
-		this.expSelf();
-	}
+    private static final long         serialVersionUID      = 1L;
+
+    /**
+     * The value nearest to the constant Pi.
+     */
+    public static final DoubleDouble  PI                    = new DoubleDouble(
+                                                                               3.141592653589793116e+00,
+                                                                               1.224646799147353207e-16);
+
+    /**
+     * The value nearest to the constant 2 * Pi.
+     */
+    public static final DoubleDouble  TWO_PI                = new DoubleDouble(
+                                                                               6.283185307179586232e+00,
+                                                                               2.449293598294706414e-16);
+
+    /**
+     * The value nearest to the constant Pi / 2.
+     */
+    public static final DoubleDouble  PI_2                  = new DoubleDouble(
+                                                                               1.570796326794896558e+00,
+                                                                               6.123233995736766036e-17);
+
+    /**
+     * The value nearest to the constant e (the natural logarithm base).
+     */
+    public static final DoubleDouble  E                     = new DoubleDouble(
+                                                                               2.718281828459045091e+00,
+                                                                               1.445646891729250158e-16);
+
+    /**
+     * A value representing the result of an operation which does not return a
+     * valid number.
+     */
+    public static final DoubleDouble  NaN                   = new DoubleDouble(
+                                                                               Double.NaN,
+                                                                               Double.NaN);
+
+    /**
+     * The smallest representable relative difference between two {link @
+     * DoubleDouble} values
+     */
+    public static final double        EPS                   = 1.23259516440783e-32;                      /* = 2^-106 */
+
+    /**
+     * The value to split a double-precision value on during multiplication
+     */
+    private static final double       SPLIT                 = 134217729.0D;                              // 2^27+1, for IEEE double
+
+    private static final int          MAX_PRINT_DIGITS      = 32;
+
+    private static final DoubleDouble TEN                   = new DoubleDouble(
+                                                                               10.0);
+
+    private static final DoubleDouble ONE                   = new DoubleDouble(
+                                                                               1.0);
+
+    private static final String       SCI_NOT_EXPONENT_CHAR = "E";
+
+    private static final String       SCI_NOT_ZERO          = "0.0E0";
+
+    /**
+     * Converts a string representation of a real number into a DoubleDouble
+     * value. The format accepted is similar to the standard Java real number
+     * syntax. It is defined by the following regular expression:
+     * 
+     * <pre>
+     * [<tt>+</tt>|<tt>-</tt>] {<i>digit</i>} [ <tt>.</tt> {<i>digit</i>} ] [ ( <tt>e</tt> | <tt>E</tt> ) [<tt>+</tt>|<tt>-</tt>
+     * ] {<i>digit</i>}+
+     * 
+     * <pre>
+     * 
+     * @param str the string to parse
+     * @return the value of the parsed number
+     * @throws NumberFormatException if <tt>str</tt>
+     * is not a valid representation of a number
+     */
+    public static DoubleDouble parse(String str) throws NumberFormatException {
+        int i = 0;
+        int strlen = str.length();
+
+        // skip leading whitespace
+        while (Character.isWhitespace(str.charAt(i))) {
+            i++;
+        }
+
+        // check for sign
+        boolean isNegative = false;
+        if (i < strlen) {
+            char signCh = str.charAt(i);
+            if (signCh == '-' || signCh == '+') {
+                i++;
+                if (signCh == '-') {
+                    isNegative = true;
+                }
+            }
+        }
+
+        // scan all digits and accumulate into an integral value
+        // Keep track of the location of the decimal point (if any) to allow
+        // scaling later
+        DoubleDouble val = new DoubleDouble();
+
+        int numDigits = 0;
+        int numBeforeDec = 0;
+        int exp = 0;
+        while (true) {
+            if (i >= strlen) {
+                break;
+            }
+            char ch = str.charAt(i);
+            i++;
+            if (Character.isDigit(ch)) {
+                double d = ch - '0';
+                val.selfMultiply(TEN);
+                // MD: need to optimize this
+                val.selfAdd(new DoubleDouble(d));
+                numDigits++;
+                continue;
+            }
+            if (ch == '.') {
+                numBeforeDec = numDigits;
+                continue;
+            }
+            if (ch == 'e' || ch == 'E') {
+                String expStr = str.substring(i);
+                // this should catch any format problems with the exponent
+                try {
+                    exp = Integer.parseInt(expStr);
+                } catch (NumberFormatException ex) {
+                    throw new NumberFormatException("Invalid exponent "
+                                                    + expStr + " in string "
+                                                    + str);
+                }
+                break;
+            }
+            throw new NumberFormatException("Unexpected character '" + ch
+                                            + "' at position " + i
+                                            + " in string " + str);
+        }
+        DoubleDouble val2 = val;
+
+        // scale the number correctly
+        int numDecPlaces = numDigits - numBeforeDec - exp;
+        if (numDecPlaces == 0) {
+            val2 = val;
+        } else if (numDecPlaces > 0) {
+            DoubleDouble scale = TEN.pow(numDecPlaces);
+            val2 = val.divide(scale);
+        } else if (numDecPlaces < 0) {
+            DoubleDouble scale = TEN.pow(-numDecPlaces);
+            val2 = val.multiply(scale);
+        }
+        // apply leading sign, if any
+        if (isNegative) {
+            return val2.negate();
+        }
+        return val2;
+
+    }
+
+    /**
+     * Converts the <tt>double</tt> argument to a DoubleDouble number.
+     * 
+     * @param x
+     *            a numeric value
+     * @return the extended precision version of the value
+     */
+    public static DoubleDouble valueOf(double x) {
+        return new DoubleDouble(x);
+    }
+
+    /**
+     * Converts the string argument to a DoubleDouble number.
+     * 
+     * @param str
+     *            a string containing a representation of a numeric value
+     * @return the extended precision version of the value
+     * @throws NumberFormatException
+     *             if <tt>s</tt> is not a valid representation of a number
+     */
+    public static DoubleDouble valueOf(String str) throws NumberFormatException {
+        return parse(str);
+    }
+
+    /**
+     * Determines the decimal magnitude of a number. The magnitude is the
+     * exponent of the greatest power of 10 which is less than or equal to the
+     * number.
+     * 
+     * @param x
+     *            the number to find the magnitude of
+     * @return the decimal magnitude of x
+     */
+    private static int magnitude(double x) {
+        double xAbs = Math.abs(x);
+        double xLog10 = Math.log(xAbs) / Math.log(10);
+        int xMag = (int) Math.floor(xLog10);
+        /**
+         * Since log computation is inexact, there may be an off-by-one error in
+         * the computed magnitude. Following tests that magnitude is correct,
+         * and adjusts it if not
+         */
+        double xApprox = Math.pow(10, xMag);
+        if (xApprox * 10 <= xAbs) {
+            xMag += 1;
+        }
+
+        return xMag;
+    }
+
+    /**
+     * Creates a string of a given length containing the given character
+     * 
+     * @param ch
+     *            the character to be repeated
+     * @param len
+     *            the len of the desired string
+     * @return the string
+     */
+    private static String stringOfChar(char ch, int len) {
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < len; i++) {
+            buf.append(ch);
+        }
+        return buf.toString();
+    }
+
+    /**
+     * The high-order component of the double-double precision value.
+     */
+    private double hi = 0.0;
+
+    /**
+     * The low-order component of the double-double precision value.
+     */
+    private double lo = 0.0;
+
+    /**
+     * Creates a new DoubleDouble with value 0.0.
+     */
+    public DoubleDouble() {
+        init(0.0);
+    }
+
+    /*
+     * double getHighComponent() { return hi; }
+     * 
+     * double getLowComponent() { return lo; }
+     */
+
+    // Testing only - should not be public
+    /*
+     * public void RENORM() { double s = hi + lo; double err = lo - (s - hi); hi
+     * = s; lo = err; }
+     */
+
+    /**
+     * Creates a new DoubleDouble with value x.
+     * 
+     * @param x
+     *            the value to initialize
+     */
+    public DoubleDouble(double x) {
+        init(x);
+    }
+
+    /**
+     * Creates a new DoubleDouble with value (hi, lo).
+     * 
+     * @param hi
+     *            the high-order component
+     * @param lo
+     *            the high-order component
+     */
+    public DoubleDouble(double hi, double lo) {
+        init(hi, lo);
+    }
+
+    /*
+     * // experimental private DoubleDouble selfAdd(double yhi, double ylo) {
+     * double H, h, T, t, S, s, e, f; S = hi + yhi; T = lo + ylo; e = S - hi; f
+     * = T - lo; s = S-e; t = T-f; s = (yhi-e)+(hi-s); t = (ylo-f)+(lo-t); e =
+     * s+T; H = S+e; h = e+(S-H); e = t+h;
+     * 
+     * double zhi = H + e; double zlo = e + (H - zhi); hi = zhi; lo = zlo;
+     * 
+     * return this; }
+     */
+
+    /**
+     * Creates a new DoubleDouble with value equal to the argument.
+     * 
+     * @param dd
+     *            the value to initialize
+     */
+    public DoubleDouble(DoubleDouble dd) {
+        init(dd);
+    }
+
+    /*
+     * public DoubleDouble selfSubtract(DoubleDouble y) { if (isNaN()) return
+     * this; return selfAdd(-y.hi, -y.lo); }
+     */
+
+    /**
+     * Creates a new DoubleDouble with value equal to the argument.
+     * 
+     * @param str
+     *            the value to initialize by
+     * @throws NumberFormatException
+     *             if <tt>str</tt> is not a valid representation of a number
+     */
+    public DoubleDouble(String str) throws NumberFormatException {
+        this(parse(str));
+    }
+
+    /**
+     * Returns the absolute value of this value. Special cases:
+     * <ul>
+     * <li>If this value is NaN, it is returned.
+     * </ul>
+     * 
+     * @return the absolute value of this value
+     */
+    public DoubleDouble abs() {
+        if (isNaN()) {
+            return NaN;
+        }
+        if (isNegative()) {
+            return negate();
+        }
+        return new DoubleDouble(this);
+    }
+
+    /**
+     * Returns a DoubleDouble whose value is <tt>(this + y)</tt>.
+     * 
+     * @param y
+     *            the addend
+     * @return <tt>(this + y)</tt>
+     */
+    public DoubleDouble add(DoubleDouble y) {
+        if (isNaN()) {
+            return this;
+        }
+        return new DoubleDouble(this).selfAdd(y);
+    }
+
+    /**
+     * Returns the smallest (closest to negative infinity) value that is not
+     * less than the argument and is equal to a mathematical integer. Special
+     * cases:
+     * <ul>
+     * <li>If this value is NaN, returns NaN.
+     * </ul>
+     * 
+     * @return the smallest (closest to negative infinity) value that is not
+     *         less than the argument and is equal to a mathematical integer.
+     */
+    public DoubleDouble ceil() {
+        if (isNaN()) {
+            return NaN;
+        }
+        double fhi = Math.ceil(hi);
+        double flo = 0.0;
+        // Hi is already integral. Ceil the low word
+        if (fhi == hi) {
+            flo = Math.ceil(lo);
+            // do we need to renormalize here?
+        }
+        return new DoubleDouble(fhi, flo);
+    }
+
+    /*
+     * 
+     * // experimental public DoubleDouble selfDivide(DoubleDouble y) { double
+     * hc, tc, hy, ty, C, c, U, u; C = hi/y.hi; c = SPLIT*C; hc =c-C; u =
+     * SPLIT*y.hi; hc = c-hc; tc = C-hc; hy = u-y.hi; U = C * y.hi; hy = u-hy;
+     * ty = y.hi-hy; u = (((hc*hy-U)+hc*ty)+tc*hy)+tc*ty; c =
+     * ((((hi-U)-u)+lo)-C*y.lo)/y.hi; u = C+c;
+     * 
+     * hi = u; lo = (C-u)+c; return this; }
+     */
+
+    /**
+     * Creates and returns a copy of this value.
+     * 
+     * @return a copy of this value
+     */
+    @Override
+    public Object clone() {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException ex) {
+            // should never reach here
+            return null;
+        }
+    }
+
+    /**
+     * Compares two DoubleDouble objects numerically.
+     * 
+     * @return -1,0 or 1 depending on whether this value is less than, equal to
+     *         or greater than the value of <tt>o</tt>
+     */
+    @Override
+    public int compareTo(DoubleDouble other) {
+        if (hi < other.hi) {
+            return -1;
+        }
+        if (hi > other.hi) {
+            return 1;
+        }
+        if (lo < other.lo) {
+            return -1;
+        }
+        if (lo > other.lo) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Returns a DoubleDouble whose value is <tt>(this / y)</tt>.
+     * 
+     * @param y
+     *            the divisor
+     * @return <tt>(this / y)</tt>
+     */
+    public DoubleDouble divide(DoubleDouble y) {
+        double hc, tc, hy, ty, C, c, U, u;
+        C = hi / y.hi;
+        c = SPLIT * C;
+        hc = c - C;
+        u = SPLIT * y.hi;
+        hc = c - hc;
+        tc = C - hc;
+        hy = u - y.hi;
+        U = C * y.hi;
+        hy = u - hy;
+        ty = y.hi - hy;
+        u = hc * hy - U + hc * ty + tc * hy + tc * ty;
+        c = (hi - U - u + lo - C * y.lo) / y.hi;
+        u = C + c;
+
+        double zhi = u;
+        double zlo = C - u + c;
+        return new DoubleDouble(zhi, zlo);
+    }
+
+    /**
+     * Converts this value to the nearest double-precision number.
+     * 
+     * @return the nearest double-precision number to this value
+     */
+    public double doubleValue() {
+        return hi + lo;
+    }
+
+    /**
+     * Dumps the components of this number to a string.
+     * 
+     * @return a string showing the components of the number
+     */
+    public String dump() {
+        return "DD<" + hi + ", " + lo + ">";
+    }
+
+    /**
+     * Tests whether this value is equal to another <tt>DoubleDouble</tt> value.
+     * 
+     * @param y
+     *            a DoubleDouble value
+     * @return true if this value = y
+     */
+    public boolean equals(DoubleDouble y) {
+        return hi == y.hi && lo == y.lo;
+    }
+
+    /**
+     * Returns the largest (closest to positive infinity) value that is not
+     * greater than the argument and is equal to a mathematical integer. Special
+     * cases:
+     * <ul>
+     * <li>If this value is NaN, returns NaN.
+     * </ul>
+     * 
+     * @return the largest (closest to positive infinity) value that is not
+     *         greater than the argument and is equal to a mathematical integer.
+     */
+    public DoubleDouble floor() {
+        if (isNaN()) {
+            return NaN;
+        }
+        double fhi = Math.floor(hi);
+        double flo = 0.0;
+        // Hi is already integral. Floor the low word
+        if (fhi == hi) {
+            flo = Math.floor(lo);
+        }
+        // do we need to renormalize here?
+        return new DoubleDouble(fhi, flo);
+    }
+
+    /**
+     * Tests whether this value is greater than or equals to another
+     * <tt>DoubleDouble</tt> value.
+     * 
+     * @param y
+     *            a DoubleDouble value
+     * @return true if this value >= y
+     */
+    public boolean ge(DoubleDouble y) {
+        return hi > y.hi || hi == y.hi && lo >= y.lo;
+    }
+
+    /**
+     * Tests whether this value is greater than another <tt>DoubleDouble</tt>
+     * value.
+     * 
+     * @param y
+     *            a DoubleDouble value
+     * @return true if this value > y
+     */
+    public boolean gt(DoubleDouble y) {
+        return hi > y.hi || hi == y.hi && lo > y.lo;
+    }
+
+    /**
+     * Converts this value to the nearest integer.
+     * 
+     * @return the nearest integer to this value
+     */
+    public int intValue() {
+        return (int) hi;
+    }
+
+    /*------------------------------------------------------------
+     *   Conversion Functions
+     *------------------------------------------------------------
+     */
+
+    /**
+     * Tests whether this value is NaN.
+     * 
+     * @return true if this value is NaN
+     */
+    public boolean isNaN() {
+        return Double.isNaN(hi);
+    }
+
+    /**
+     * Tests whether this value is less than 0.
+     * 
+     * @return true if this value is less than 0
+     */
+    public boolean isNegative() {
+        return hi < 0.0 || hi == 0.0 && lo < 0.0;
+    }
+
+    /*------------------------------------------------------------
+     *   Predicates
+     *------------------------------------------------------------
+     */
+
+    /**
+     * Tests whether this value is greater than 0.
+     * 
+     * @return true if this value is greater than 0
+     */
+    public boolean isPositive() {
+        return hi > 0.0 || hi == 0.0 && lo > 0.0;
+    }
+
+    /**
+     * Tests whether this value is equal to 0.
+     * 
+     * @return true if this value is equal to 0
+     */
+    public boolean isZero() {
+        return hi == 0.0 && lo == 0.0;
+    }
+
+    /**
+     * Tests whether this value is less than or equal to another
+     * <tt>DoubleDouble</tt> value.
+     * 
+     * @param y
+     *            a DoubleDouble value
+     * @return true if this value <= y
+     */
+    public boolean le(DoubleDouble y) {
+        return hi < y.hi || hi == y.hi && lo <= y.lo;
+    }
+
+    /**
+     * Tests whether this value is less than another <tt>DoubleDouble</tt>
+     * value.
+     * 
+     * @param y
+     *            a DoubleDouble value
+     * @return true if this value < y
+     */
+    public boolean lt(DoubleDouble y) {
+        return hi < y.hi || hi == y.hi && lo < y.lo;
+    }
+
+    /**
+     * Returns a DoubleDouble whose value is <tt>(this * y)</tt>.
+     * 
+     * @param y
+     *            the multiplicand
+     * @return <tt>(this * y)</tt>
+     */
+    public DoubleDouble multiply(DoubleDouble y) {
+        if (isNaN()) {
+            return this;
+        }
+        if (y.isNaN()) {
+            return y;
+        }
+        return new DoubleDouble(this).selfMultiply(y);
+    }
+
+    /**
+     * Returns a DoubleDouble whose value is <tt>-this</tt>.
+     * 
+     * @return <tt>-this</tt>
+     */
+    public DoubleDouble negate() {
+        if (isNaN()) {
+            return this;
+        }
+        return new DoubleDouble(-hi, -lo);
+    }
+
+    /**
+     * Computes the value of this number raised to an integral power. Follows
+     * semantics of Java Math.pow as closely as possible.
+     * 
+     * @param exp
+     *            the integer exponent
+     * @return x raised to the integral power exp
+     */
+    public DoubleDouble pow(int exp) {
+        if (exp == 0.0) {
+            return valueOf(1.0);
+        }
+
+        DoubleDouble r = new DoubleDouble(this);
+        DoubleDouble s = valueOf(1.0);
+        int n = Math.abs(exp);
+
+        if (n > 1) {
+            /* Use binary exponentiation */
+            while (n > 0) {
+                if (n % 2 == 1) {
+                    s.selfMultiply(r);
+                }
+                n /= 2;
+                if (n > 0) {
+                    r = r.sqr();
+                }
+            }
+        } else {
+            s = r;
+        }
+
+        /* Compute the reciprocal if n is negative. */
+        if (exp < 0) {
+            return s.reciprocal();
+        }
+        return s;
+    }
+
+    /**
+     * Returns a DoubleDouble whose value is <tt>1 / this</tt>.
+     * 
+     * @return the reciprocal of this value
+     */
+    public DoubleDouble reciprocal() {
+        double hc, tc, hy, ty, C, c, U, u;
+        C = 1.0 / hi;
+        c = SPLIT * C;
+        hc = c - C;
+        u = SPLIT * hi;
+        hc = c - hc;
+        tc = C - hc;
+        hy = u - hi;
+        U = C * hi;
+        hy = u - hy;
+        ty = hi - hy;
+        u = hc * hy - U + hc * ty + tc * hy + tc * ty;
+        c = (1.0 - U - u - C * lo) / hi;
+
+        double zhi = C + c;
+        double zlo = C - zhi + c;
+        return new DoubleDouble(zhi, zlo);
+    }
+
+    /**
+     * Rounds this value to the nearest integer. The value is rounded to an
+     * integer by adding 1/2 and taking the floor of the result. Special cases:
+     * <ul>
+     * <li>If this value is NaN, returns NaN.
+     * </ul>
+     * 
+     * @return this value rounded to the nearest integer
+     */
+    public DoubleDouble rint() {
+        if (isNaN()) {
+            return this;
+        }
+        // may not be 100% correct
+        DoubleDouble plus5 = add(new DoubleDouble(0.5));
+        return plus5.floor();
+    }
+
+    /**
+     * Returns an integer indicating the sign of this value.
+     * <ul>
+     * <li>if this value is > 0, returns 1
+     * <li>if this value is < 0, returns -1
+     * <li>if this value is = 0, returns 0
+     * <li>if this value is NaN, returns 0
+     * </ul>
+     * 
+     * @return an integer indicating the sign of this value
+     */
+    public int signum() {
+        if (isPositive()) {
+            return 1;
+        }
+        if (isNegative()) {
+            return -1;
+        }
+        return 0;
+    }
+
+    /*------------------------------------------------------------
+     *   Output
+     *------------------------------------------------------------
+     */
+
+    /**
+     * Computes the square of this value.
+     * 
+     * @return the square of this value.
+     */
+    public DoubleDouble sqr() {
+        return multiply(this);
+    }
+
+    /**
+     * Computes the positive square root of this value. If the number is NaN or
+     * negative, NaN is returned.
+     * 
+     * @return the positive square root of this number. If the argument is NaN
+     *         or less than zero, the result is NaN.
+     */
+    public DoubleDouble sqrt() {
+        /*
+         * Strategy: Use Karp's trick: if x is an approximation to sqrt(a), then
+         * 
+         * sqrt(a) = a*x + [a - (a*x)^2] * x / 2 (approx)
+         * 
+         * The approximation is accurate to twice the accuracy of x. Also, the
+         * multiplication (a*x) and [-]*x can be done with only half the
+         * precision.
+         */
+
+        if (isZero()) {
+            return new DoubleDouble(0.0);
+        }
+
+        if (isNegative()) {
+            return NaN;
+        }
+
+        double x = 1.0 / Math.sqrt(hi);
+        double ax = hi * x;
+
+        DoubleDouble axdd = new DoubleDouble(ax);
+        DoubleDouble diffSq = subtract(axdd.sqr());
+        double d2 = diffSq.hi * (x * 0.5);
+
+        return axdd.add(new DoubleDouble(d2));
+    }
+
+    /**
+     * Returns a DoubleDouble whose value is <tt>(this - y)</tt>.
+     * 
+     * @param y
+     *            the subtrahend
+     * @return <tt>(this - y)</tt>
+     */
+    public DoubleDouble subtract(DoubleDouble y) {
+        if (isNaN()) {
+            return this;
+        }
+        return add(y.negate());
+    }
+
+    /**
+     * Returns the string representation of this value in scientific notation.
+     * 
+     * @return the string representation in scientific notation
+     */
+    public String toSciNotation() {
+        // special case zero, to allow as
+        if (isZero()) {
+            return SCI_NOT_ZERO;
+        }
+
+        String specialStr = getSpecialNumberString();
+        if (specialStr != null) {
+            return specialStr;
+        }
+
+        int[] magnitude = new int[1];
+        String digits = extractSignificantDigits(false, magnitude);
+        String expStr = SCI_NOT_EXPONENT_CHAR + magnitude[0];
+
+        // should never have leading zeroes
+        // MD - is this correct? Or should we simply strip them if they are
+        // present?
+        if (digits.charAt(0) == '0') {
+            throw new IllegalStateException("Found leading zero: " + digits);
+        }
+
+        // add decimal point
+        String trailingDigits = "";
+        if (digits.length() > 1) {
+            trailingDigits = digits.substring(1);
+        }
+        String digitsWithDecimal = digits.charAt(0) + "." + trailingDigits;
+
+        if (isNegative()) {
+            return "-" + digitsWithDecimal + expStr;
+        }
+        return digitsWithDecimal + expStr;
+    }
+
+    /**
+     * Returns the string representation of this value in standard notation.
+     * 
+     * @return the string representation in standard notation
+     */
+    public String toStandardNotation() {
+        String specialStr = getSpecialNumberString();
+        if (specialStr != null) {
+            return specialStr;
+        }
+
+        int[] magnitude = new int[1];
+        String sigDigits = extractSignificantDigits(true, magnitude);
+        int decimalPointPos = magnitude[0] + 1;
+
+        String num = sigDigits;
+        // add a leading 0 if the decimal point is the first char
+        if (sigDigits.charAt(0) == '.') {
+            num = "0" + sigDigits;
+        } else if (decimalPointPos < 0) {
+            num = "0." + stringOfChar('0', -decimalPointPos) + sigDigits;
+        } else if (sigDigits.indexOf('.') == -1) {
+            // no point inserted - sig digits must be smaller than magnitude of
+            // number
+            // add zeroes to end to make number the correct size
+            int numZeroes = decimalPointPos - sigDigits.length();
+            String zeroes = stringOfChar('0', numZeroes);
+            num = sigDigits + zeroes + ".0";
+        }
+
+        if (isNegative()) {
+            return "-" + num;
+        }
+        return num;
+    }
+
+    /**
+     * Returns a string representation of this number, in either standard or
+     * scientific notation. If the magnitude of the number is in the range [
+     * 10<sup>-3</sup>, 10<sup>8</sup> ] standard notation will be used.
+     * Otherwise, scientific notation will be used.
+     * 
+     * @return a string representation of this number
+     */
+    @Override
+    public String toString() {
+        int mag = magnitude(hi);
+        if (mag >= -3 && mag <= 20) {
+            return toStandardNotation();
+        }
+        return toSciNotation();
+    }
+
+    /**
+     * Returns the integer which is largest in absolute value and not further
+     * from zero than this value. Special cases:
+     * <ul>
+     * <li>If this value is NaN, returns NaN.
+     * </ul>
+     * 
+     * @return the integer which is largest in absolute value and not further
+     *         from zero than this value
+     */
+    public DoubleDouble trunc() {
+        if (isNaN()) {
+            return NaN;
+        }
+        if (isPositive()) {
+            return floor();
+        } else {
+            return ceil();
+        }
+    }
+
+    /**
+     * Extracts the significant digits in the decimal representation of the
+     * argument. A decimal point may be optionally inserted in the string of
+     * digits (as long as its position lies within the extracted digits - if
+     * not, the caller must prepend or append the appropriate zeroes and decimal
+     * point).
+     * 
+     * @param y
+     *            the number to extract ( >= 0)
+     * @param decimalPointPos
+     *            the position in which to insert a decimal point
+     * @return the string containing the significant digits and possibly a
+     *         decimal point
+     */
+    private String extractSignificantDigits(boolean insertDecimalPoint,
+                                            int[] magnitude) {
+        DoubleDouble y = abs();
+        // compute *correct* magnitude of y
+        int mag = magnitude(y.hi);
+        DoubleDouble scale = TEN.pow(mag);
+        y = y.divide(scale);
+
+        // fix magnitude if off by one
+        if (y.gt(TEN)) {
+            y = y.divide(TEN);
+            mag += 1;
+        } else if (y.lt(ONE)) {
+            y = y.multiply(TEN);
+            mag -= 1;
+        }
+
+        int decimalPointPos = mag + 1;
+        StringBuffer buf = new StringBuffer();
+        int numDigits = MAX_PRINT_DIGITS - 1;
+        for (int i = 0; i <= numDigits; i++) {
+            if (insertDecimalPoint && i == decimalPointPos) {
+                buf.append('.');
+            }
+            int digit = (int) y.hi;
+            // System.out.println("printDump: [" + i + "] digit: " + digit +
+            // "  y: " + y.dump() + "  buf: " + buf);
+
+            /**
+             * This should never happen, due to heuristic checks on remainder
+             * below
+             */
+            if (digit < 0 || digit > 9) {
+                // System.out.println("digit > 10 : " + digit);
+                // throw new
+                // IllegalStateException("Internal errror: found digit = " +
+                // digit);
+            }
+            /**
+             * If a negative remainder is encountered, simply terminate the
+             * extraction. This is robust, but maybe slightly inaccurate. My
+             * current hypothesis is that negative remainders only occur for
+             * very small lo components, so the inaccuracy is tolerable
+             */
+            if (digit < 0) {
+                break;
+                // throw new
+                // IllegalStateException("Internal errror: found digit = " +
+                // digit);
+            }
+            boolean rebiasBy10 = false;
+            char digitChar = 0;
+            if (digit > 9) {
+                // set flag to re-bias after next 10-shift
+                rebiasBy10 = true;
+                // output digit will end up being '9'
+                digitChar = '9';
+            } else {
+                digitChar = (char) ('0' + digit);
+            }
+            buf.append(digitChar);
+            y = y.subtract(DoubleDouble.valueOf(digit)).multiply(TEN);
+            if (rebiasBy10) {
+                y.selfAdd(TEN);
+            }
+
+            boolean continueExtractingDigits = true;
+            /**
+             * Heuristic check: if the remaining portion of y is non-positive,
+             * assume that output is complete
+             */
+            // if (y.hi <= 0.0)
+            // if (y.hi < 0.0)
+            // continueExtractingDigits = false;
+            /**
+             * Check if remaining digits will be 0, and if so don't output them.
+             * Do this by comparing the magnitude of the remainder with the
+             * expected precision.
+             */
+            int remMag = magnitude(y.hi);
+            if (remMag < 0 && Math.abs(remMag) >= numDigits - i) {
+                continueExtractingDigits = false;
+            }
+            if (!continueExtractingDigits) {
+                break;
+            }
+        }
+        magnitude[0] = mag;
+        return buf.toString();
+    }
+
+    /**
+     * Returns the string for this value if it has a known representation. (E.g.
+     * NaN or 0.0)
+     * 
+     * @return the string for this special number
+     * @return null if the number is not a special number
+     */
+    private String getSpecialNumberString() {
+        if (isZero()) {
+            return "0.0";
+        }
+        if (isNaN()) {
+            return "NaN ";
+        }
+        return null;
+    }
+
+    private void init(double x) {
+        init(x, 0.0);
+    }
+
+    private void init(double hi, double lo) {
+        this.hi = hi;
+        this.lo = lo;
+    }
+
+    private void init(DoubleDouble dd) {
+        init(dd.hi, dd.lo);
+    }
+
+    /**
+     * Adds the argument to the value of <tt>this</tt>. To prevent altering
+     * constants, this method <b>must only</b> be used on values known to be
+     * newly created.
+     * 
+     * @param y
+     *            the addend
+     * @return <tt>this</tt>, with its value incremented by <tt>y</tt>
+     */
+    private DoubleDouble selfAdd(DoubleDouble y) {
+        double H, h, T, t, S, s, e, f;
+        S = hi + y.hi;
+        T = lo + y.lo;
+        e = S - hi;
+        f = T - lo;
+        s = S - e;
+        t = T - f;
+        s = y.hi - e + (hi - s);
+        t = y.lo - f + (lo - t);
+        e = s + T;
+        H = S + e;
+        h = e + (S - H);
+        e = t + h;
+
+        double zhi = H + e;
+        double zlo = e + (H - zhi);
+        hi = zhi;
+        lo = zlo;
+
+        return this;
+    }
+
+    /*------------------------------------------------------------
+     *   Input
+     *------------------------------------------------------------
+     */
+
+    /**
+     * Multiplies this by the argument, returning this. To prevent altering
+     * constants, this method <b>must only</b> be used on values known to be
+     * newly created.
+     * 
+     * @param y
+     *            a DoubleDouble value to multiply by
+     * @return this
+     */
+    private DoubleDouble selfMultiply(DoubleDouble y) {
+        double hx, tx, hy, ty, C, c;
+        C = SPLIT * hi;
+        hx = C - hi;
+        c = SPLIT * y.hi;
+        hx = C - hx;
+        tx = hi - hx;
+        hy = c - y.hi;
+        C = hi * y.hi;
+        hy = c - hy;
+        ty = y.hi - hy;
+        c = hx * hy - C + hx * ty + tx * hy + tx * ty + (hi * y.lo + lo * y.hi);
+        double zhi = C + c;
+        hx = C - zhi;
+        double zlo = c + hx;
+        hi = zhi;
+        lo = zlo;
+        return this;
+    }
 }

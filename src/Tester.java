@@ -1,3 +1,4 @@
+
 import java.awt.Cursor;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -5,12 +6,14 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.Timer;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
+
+
+import resources.DoubleDouble;
 
 
 public class Tester{
 	double threshold=Launcher.threshold;
-	BigDecimal thresholdHP = BigDecimal.valueOf(Launcher.threshold);		//threshold doesn't really need high precision but a BigDecimal object is needed for calculations
+	BigDecimal thresholdHP = BigDecimal.valueOf(Launcher.threshold);		//threshold doesn't really need infinite precision but a BigDecimal object is needed for calculations
 	int limit=Launcher.limit;		//number of iterations to run before stopping
 	MathContext rMode = BigComplex.rMode;
 	ForkJoinPool commonPool = ForkJoinPool.commonPool();
@@ -64,11 +67,15 @@ public class Tester{
 		
 		//finds the complex numbers based on the pixel numbers
 		//then tests those numbers 
-		for(int x=0; x<width; x++) {
-			double real= ((bottomRight.getReal()-topLeft.getReal())/ (double) width)* (double) x+topLeft.getReal();
+		
+		double realFactor = ((topLeft.getReal()-bottomRight.getReal())/(double) width);
+		double imagFactor = ((topLeft.getImag()-bottomRight.getImag())/ (double) height);
+		
+		for(int x=0; x<width; x++) {			
+			double real = topLeft.getReal()-realFactor * x;
 			
 			for(int y=0;y<height;y++) {
-				double imag= topLeft.getImag()-((topLeft.getImag()-bottomRight.getImag())/ (double) height)* (double) y;
+				double imag= topLeft.getImag()-imagFactor* y;
 				
 				//bulb checking
 				double q = Math.pow((real-0.25),2)+Math.pow(imag, 2);
@@ -97,10 +104,10 @@ public class Tester{
 		
 	}
 	
-	//tests 3 and 4 are for high precision calculations
+	//tests 3 and 4 are for infinite precision calculations
 	
 	/**
-	 * The same as test1 but for High Precision.
+	 * The same as test1 but for infinite Precision.
 	 * Tests if a single ComplexLong number is in the Mandelbrot set.
 	 * If not returns the number of iterations taken to exceed the threshold.
 	 * @param c The ComplexLong to test.
@@ -127,7 +134,7 @@ public class Tester{
 	}
 	
 	/**
-	 * The same as Test2 but for High Precision.
+	 * The same as Test2 but for infinite Precision.
 	 * Takes in a range of complex numbers and returns a 2D array
 	 * of the number of iterations each took to reach the threshold
 	 * @param topLeft	The top left complex number
@@ -137,12 +144,12 @@ public class Tester{
 	 * @return	A 2D array of longs showing the number of iterations taken.
 	 * @see test2
 	 */
-	public void test4(BigComplex topLeftHP, BigComplex bottomRightHP, BigDecimal widthHP, BigDecimal heightHP){
+	public void test4(BigComplex topLeftIP, BigComplex bottomRightIP, BigDecimal widthIP, BigDecimal heightIP){
 		startTime = System.currentTimeMillis();
 		
 		
-		int width = widthHP.intValue();
-		int height = heightHP.intValue();		
+		int width = widthIP.intValue();
+		int height = heightIP.intValue();		
 		limit = Launcher.limit;
 		
 		if(!Launcher.firstBoot) {
@@ -159,13 +166,13 @@ public class Tester{
 		//then tests those numbers 
 		BigDecimal fourth = new BigDecimal("0.25");
 		for(int x=0; x<width; x++) {
-			BigDecimal real = ((bottomRightHP.getReal().subtract(topLeftHP.getReal(),rMode)).divide(widthHP,rMode))
-								.multiply(BigDecimal.valueOf(x),rMode).add(topLeftHP.getReal(),rMode);
+			BigDecimal real = ((bottomRightIP.getReal().subtract(topLeftIP.getReal(),rMode)).divide(widthIP,rMode))
+								.multiply(BigDecimal.valueOf(x),rMode).add(topLeftIP.getReal(),rMode);
 			
 			
 			for(int y=0; y<height; y++) {
-				BigDecimal imag= ((bottomRightHP.getImag().subtract(topLeftHP.getImag(),rMode)).divide(heightHP,rMode))
-								.multiply(BigDecimal.valueOf(y),rMode).add(topLeftHP.getImag(),rMode);
+				BigDecimal imag= ((bottomRightIP.getImag().subtract(topLeftIP.getImag(),rMode)).divide(heightIP,rMode))
+								.multiply(BigDecimal.valueOf(y),rMode).add(topLeftIP.getImag(),rMode);
 				
 				//bulb checking
 				BigDecimal q = (real.subtract(fourth)).pow(2).add(imag.pow(2));
@@ -173,12 +180,72 @@ public class Tester{
 					//if true number is in bulb so it has to be in the set (black)
 					Launcher.resultsArray[x][y]= 0;
 				}else {
-					HPTest task = new HPTest(new BigComplex(real,imag),thresholdHP,x,y);
+					IPTest task = new IPTest(new BigComplex(real,imag),thresholdHP,x,y);
 					commonPool.submit(task);
 				}
 			}
 		}
 		
+		while(!commonPool.isQuiescent()) {
+			Long currentTime = System.currentTimeMillis();
+			Long timeTaken = currentTime - startTime;
+			if(!Launcher.firstBoot) {Launcher.display.progressBar.setValue(width*height - commonPool.getQueuedSubmissionCount());}  //update progress bar
+			
+			//set time estimate (time taken / percent done) - time taken
+			double timeEstimate = (((double) timeTaken / Launcher.display.progressBar.getPercentComplete()- timeTaken) / 1000);
+			double A = ((timeEstimate % 86400 ) % 3600 ) ;
+			int min = (int) A / 60;
+			int sec = (int) A % 60;
+			Launcher.display.timeEstimateDisplay.setText(String.format("%02d", min)+":"+String.format("%02d", sec));
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		if(!Launcher.firstBoot) {
+			Launcher.display.progressBar.setValue(width*height);		//set the progress bar to 100%
+			Launcher.display.waitCursor(false);							//set cursor to the hand cursor
+		}	
+	}
+	
+	public void test5(DoubleDoubleComplex topLeftHP, DoubleDoubleComplex bottomRightHP, DoubleDouble widthHP, DoubleDouble heightHP) {
+		startTime=System.currentTimeMillis();
+		
+		limit = Launcher.limit;
+		int width=widthHP.intValue();
+		int height=heightHP.intValue();
+		DoubleDouble thresholdHP= new DoubleDouble (threshold);
+		
+		if(!Launcher.firstBoot) {
+			Launcher.display.waitCursor(true);		//set cursor to the wait cursor to show processing
+			//set progress bar data
+			Launcher.display.progressBar.setMinimum(0);
+			Launcher.display.progressBar.setMaximum(width*height);
+			Launcher.display.progressBar.setValue(0);
+		}
+		
+		DoubleDouble realFactor = topLeftHP.getReal().subtract(bottomRightHP.getReal()).divide(widthHP);
+		DoubleDouble imagFactor = topLeftHP.getImag().subtract(bottomRightHP.getImag()).divide(heightHP);
+		
+		for(int x=0; x<width; x++) {
+			DoubleDouble realHP= topLeftHP.getReal().subtract(realFactor.multiply(new DoubleDouble(x)));
+			
+			for(int y=0;y<height;y++) {
+				DoubleDouble imagHP= topLeftHP.getImag().subtract(imagFactor.multiply(new DoubleDouble(y)));
+				
+				//bulb checking
+				//double q = Math.pow((real-0.25),2)+Math.pow(imag, 2);
+				//if(q*(q+(real-0.25)) <= 0.25*Math.pow(imag, 2)) {
+					//if true number is in bulb so it has to be in the set (black)
+					//Launcher.resultsArray[x][y] = 0;
+				//}else {
+					HPTest task = new HPTest(new DoubleDoubleComplex(realHP,imagHP),thresholdHP,x,y);		//create HPTest object 
+					
+					commonPool.submit(task);														//submits HPTest to pool to be executed later
+				//}
+			}    	
+		}		
 		while(!commonPool.isQuiescent()) {
 			Long currentTime = System.currentTimeMillis();
 			Long timeTaken = currentTime - startTime;

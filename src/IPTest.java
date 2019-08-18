@@ -1,34 +1,33 @@
 
+import java.math.BigDecimal;
 import java.util.concurrent.RecursiveAction;
 
-import resources.DoubleDouble;
-
 /**
- * The same as BasicTest but for high Precision.
- * Tests if a single DoubleDoubleComplex number is in the Mandelbrot set.
+ * The same as BasicTest but for infinite Precision.
+ * Tests if a single BigComplex number is in the Mandelbrot set.
  * If not returns the number of iterations taken to exceed the threshold.
  * @see BasicTest
  */
-public class HPTest extends RecursiveAction{
+public class IPTest extends RecursiveAction{
 	static final double LOG_THRESHOLD = Math.log(Launcher.threshold);
 	
-	DoubleDoubleComplex c;
+	BigComplex c;
 	int limit;
-	DoubleDouble thresholdHP;
+	BigDecimal thresholdHP;
 	int x;
 	int y;
 	
 	/**
-	 * The same as BasicTest but for high Precision.
-	 * Tests if a single DoubleDoubleComplex number is in the Mandelbrot set.
+	 * The same as BasicTest but for infinite Precision.
+	 * Tests if a single BigComplex number is in the Mandelbrot set.
 	 * If not returns the number of iterations taken to exceed the threshold.
 	 * @see BasicTest
-	 * @param c The DoubleDoubleComplex to test.
+	 * @param c The BigComplex to test.
 	 * @param thresholdHP Threshold for the test, stops once the value grows higher than this (default is 2)
 	 * @param x The pixel x value
 	 * @param y The pixel y value
 	 */
-	HPTest(DoubleDoubleComplex c, DoubleDouble thresholdHP, int x, int y){
+	IPTest(BigComplex c, BigDecimal thresholdHP, int x, int y){
 		this.c = c;
 		this.limit = Launcher.limit;
 		this.thresholdHP = thresholdHP;
@@ -38,14 +37,14 @@ public class HPTest extends RecursiveAction{
 
 	
 	protected void compute() {
-		DoubleDoubleComplex z = new DoubleDoubleComplex(DoubleDouble.valueOf(0),DoubleDouble.valueOf(0));
+		BigComplex z = new BigComplex(BigDecimal.ZERO,BigDecimal.ZERO);
 		double result= 0;
 		int smoothingCount=0;
 		
 		for(int i=1; i<=limit; i++) {
 			z.sqr();
 			z.add(c);
-			DoubleDouble value = z.abs();
+			BigDecimal value = z.abs();
 			if(value.compareTo(thresholdHP)>=0) {
 				if(smoothingCount>=2) {
 					result = smoothShading(i,value.doubleValue());

@@ -106,6 +106,7 @@ public class Display extends Canvas{
 	private JMenu mnColoringMode;
 	private JMenuItem mntmAbsoulteColoring;
 	private JMenuItem mntmRelativeColoring;
+	private JMenuItem highPrecisionBtn;
 	
  
 	
@@ -127,8 +128,8 @@ public class Display extends Canvas{
 		
 		absoluteColorMode=true;
 		
-		picker = new ColorPicker();
-		picker.show();
+		//picker = new ColorPicker();
+		//picker.show();
 		
 		//create the default gradient
 		gradient = new Gradient();
@@ -240,20 +241,6 @@ public class Display extends Canvas{
 		mnView = new JMenu("View");
 		menuBar.add(mnView);
 		
-		infinitePrecisionBtn = new JMenuItem("Infinite Precision");				//button to enable infinite precision mode
-		infinitePrecisionBtn.setToolTipText("Use Java's BigDecimal class in order to generate a graph with much more precice values, allows for a larger scale factor but icreases computation time significantly");
-		infinitePrecisionBtn.setFocusable(false);
-		infinitePrecisionBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				lowPrecisionBtn.setEnabled(true);
-				infinitePrecisionBtn.setEnabled(false);
-				
-				launcher.setPrecision(Launcher.Precision.INFINITE_PRECISION);
-				launcher.refresh();
-			}
-		});
-		mnView.add(infinitePrecisionBtn);
-		
 		lowPrecisionBtn = new JMenuItem("Low Precision");							//button to enable low precision mode
 		lowPrecisionBtn.setToolTipText("Use 64 bit floating point numbers to calculate values, provides quick calculations. Good until 10^14");
 		lowPrecisionBtn.setFocusable(false);
@@ -262,12 +249,43 @@ public class Display extends Canvas{
 			public void actionPerformed(ActionEvent arg0) {
 				lowPrecisionBtn.setEnabled(false);
 				infinitePrecisionBtn.setEnabled(true);
+				highPrecisionBtn.setEnabled(true);
 				
 				launcher.setPrecision(Launcher.Precision.LOW_PRECISION);
 				launcher.refresh();
 			}
 		});
 		mnView.add(lowPrecisionBtn);
+		
+		highPrecisionBtn = new JMenuItem("High Precision");
+		mnView.add(highPrecisionBtn);
+		highPrecisionBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				highPrecisionBtn.setEnabled(false);
+				lowPrecisionBtn.setEnabled(true);
+				infinitePrecisionBtn.setEnabled(true);
+				
+				launcher.setPrecision(Launcher.Precision.HIGH_PRECISION);
+				launcher.refresh();
+			}
+		});
+		
+		
+		infinitePrecisionBtn = new JMenuItem("Infinite Precision");				//button to enable infinite precision mode
+		infinitePrecisionBtn.setToolTipText("Use Java's BigDecimal class in order to generate a graph with much more precice values, allows for a larger scale factor but icreases computation time significantly");
+		infinitePrecisionBtn.setFocusable(false);
+		mnView.add(infinitePrecisionBtn);
+		infinitePrecisionBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				infinitePrecisionBtn.setEnabled(false);
+				lowPrecisionBtn.setEnabled(true);
+				highPrecisionBtn.setEnabled(true);
+				
+				launcher.setPrecision(Launcher.Precision.INFINITE_PRECISION);
+				launcher.refresh();
+			}
+		});
+
 		
 		mnReset = new JMenu("Reset");
 		mnView.add(mnReset);
@@ -561,10 +579,27 @@ public class Display extends Canvas{
 	 * Update the display JLabels to reflect a change in the graph settings
 	 */
 	public void updateUI() {
-		scaleDisplay.setText("Scale = " + launcher.getScale());
-		limitDisplay.setText("Limit = " + launcher.getLimit());
-		centerXDisplay.setText("X = "+Launcher.center.real);
-		centerYDisplay.setText("Y = "+Launcher.center.imag);
+		switch (launcher.precision) {
+		case LOW_PRECISION:
+			scaleDisplay.setText("Scale = " + launcher.getScale());
+			limitDisplay.setText("Limit = " + launcher.getLimit());
+			centerXDisplay.setText("X = "+Launcher.center.real);
+			centerYDisplay.setText("Y = "+Launcher.center.imag);
+			break;
+		case HIGH_PRECISION:
+			scaleDisplay.setText("Scale = " + Launcher.scaleHP);
+			limitDisplay.setText("Limit = " + Launcher.limit);
+			centerXDisplay.setText("X = "+Launcher.centerHP.real);
+			centerYDisplay.setText("Y = "+Launcher.centerHP.imag);
+			break;
+		case INFINITE_PRECISION:
+			scaleDisplay.setText("Scale = " + Launcher.scaleIP);
+			limitDisplay.setText("Limit = " + Launcher.limit);
+			centerXDisplay.setText("X = "+Launcher.centerIP.real);
+			centerYDisplay.setText("Y = "+Launcher.centerIP.imag);
+			break;
+		}
+		
 		
 	}
 	/**
