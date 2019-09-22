@@ -10,3 +10,4 @@ Learn more about the mandelbrot set here ---> [Wikipedia.org](https://en.wikiped
 
 ![image](/demo/demo.gif)
 ![image](/demo/demo2.gif)
+![image](/demo/image_003.png)
