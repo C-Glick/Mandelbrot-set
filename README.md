@@ -2,7 +2,7 @@
 A java program to generate a graph of the mandelbrot set
 
 ### [Controls](https://github.com/C-Glick/Mandelbrot-set/wiki)
-### [Full Gallery](https://github.com/C-Glick/Mandelbrot-set/wiki/gallery)
+### [Full Image Gallery](https://github.com/C-Glick/Mandelbrot-set/wiki/gallery)
 
 The base equation: z=z<sup>2</sup>+c
 
