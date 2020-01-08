@@ -1,10 +1,14 @@
 # Mandelbrot-set
 A java program to generate a graph of the mandelbrot set
 
+The base equation: z=z<sup>2</sup>+c
+
+Where c is the complex number to test. Reiterate until |z| > 2.
+The number of iterations determains the color of point c.
+
 ### [Controls](https://github.com/C-Glick/Mandelbrot-set/wiki)
 ### [Full Image Gallery](https://github.com/C-Glick/Mandelbrot-set/wiki/gallery)
 
-The base equation: z=z<sup>2</sup>+c
 
 Learn more about the mandelbrot set here ---> [Wikipedia.org](https://en.wikipedia.org/wiki/Mandelbrot_set)
 
