@@ -6,6 +6,7 @@ The base equation: z=z<sup>2</sup>+c
 Where c is the complex number to test. Reiterate until |z| > 2.
 The number of iterations determains the color of point c.
 
+### [Download the Latest Compiled .jar File](https://github.com/C-Glick/Mandelbrot-set/releases/latest)
 ### [Controls](https://github.com/C-Glick/Mandelbrot-set/wiki)
 ### [Full Image Gallery](https://github.com/C-Glick/Mandelbrot-set/wiki/gallery)
 
