@@ -61,6 +61,7 @@ public class Display extends Canvas {
 
 	boolean absoluteColorMode;
 	Gradient gradient;
+	private GradientEditor picker;
 	double colorOffset;
 	ColorCycle colorCycle;
 
@@ -70,48 +71,51 @@ public class Display extends Canvas {
 	int imageIndex = 0;
 	File importImageFile;
 
+	private Cursor cursor;
+
 	JPanel topBar;
 	JLabel scaleDisplay;
 	JLabel limitDisplay;
 	JLabel centerXDisplay;
 	JLabel centerYDisplay;
 	public JProgressBar progressBar;
-
-	private GradientEditor picker;
-
-	private Cursor cursor;
+	public JLabel timeEstimateDisplay;
 
 	Font font = new Font("Arial Unicode MS", Font.PLAIN, 14);
-	private JMenuItem infinitePrecisionBtn;
-	private JMenuItem lowPrecisionBtn;
 	private JMenuBar menuBar;
-	private JMenu mnFile;
-	private JMenuItem setSaveLocationBtn;
-	private JMenuItem exportImageBtn;
-	public JLabel timeEstimateDisplay;
-	private JMenu mnView;
-	private JMenu mnReset;
-	private JMenuItem mntmResetScaleOnly;
-	private JMenuItem mntmResetPositionOnly;
-	private JMenuItem mntmResetLimitOnly;
-	private JMenuItem mntmResetAll;
-	private JMenuItem mntmImportImage;
-	private JMenu mnSetResolution;
-	private JMenuItem mntmx;
-	private JMenuItem mntmx_1;
-	private JMenuItem mntmx_2;
-	private JMenuItem mntmx_3;
-	private JMenuItem mntmx_4;
-	private JMenuItem mntmx_5;
-	private JMenuItem mntmx_6;
-	private JMenuItem mntmx_7;
-	private JMenu mnColorCycling;
-	private JMenuItem mntmStart;
-	private JMenuItem mntmStop;
-	private JMenu mnColoringMode;
-	private JMenuItem mntmAbsoulteColoring;
-	private JMenuItem mntmRelativeColoring;
-	private JMenuItem highPrecisionBtn;
+	private JMenu fileMenu;
+	private JMenuItem setSaveLocationMenuItm;
+	private JMenuItem exportImageMenuItm;
+	private JMenuItem importImageMenuItm;
+
+	private JMenu viewMenu;
+	private JMenuItem lowPrecisionMenuItm;
+	private JMenuItem highPrecisionMenuItm;
+	private JMenuItem infinitePrecisionMenuItm;
+
+	private JMenu resetMenu;
+	private JMenuItem resetScaleOnlyMenuItm;
+	private JMenuItem resetPositionOnlyMenuItm;
+	private JMenuItem resetLimitOnlyMenuItm;
+	private JMenuItem resetAllMenuItm;
+
+	private JMenu setResolutionMenu;
+	private JMenuItem res1MenuItm;
+	private JMenuItem res2MenuItm;
+	private JMenuItem res3MenuItm;
+	private JMenuItem res4MenuItm;
+	private JMenuItem res5MenuItm;
+	private JMenuItem res6MenuItm;
+	private JMenuItem res7MenuItm;
+	private JMenuItem res8MenuItm;
+
+	private JMenu colorCyclingMenu;
+	private JMenuItem colorStartMenuItm;
+	private JMenuItem colorStopMenuItm;
+
+	private JMenu coloringModeMenu;
+	private JMenuItem absoulteColoringMenuItm;
+	private JMenuItem relativeColoringMenuItm;
 
 	public Display(String title, int width, int height, Launcher launcher) {
 		this.title = title;
@@ -186,8 +190,8 @@ public class Display extends Canvas {
 		menuBar = new JMenuBar(); // create menu bar at the top of the window
 		frame.setJMenuBar(menuBar);
 
-		mnFile = new JMenu("File"); // add file menu to the menu bar
-		menuBar.add(mnFile);
+		fileMenu = new JMenu("File"); // add file menu to the menu bar
+		menuBar.add(fileMenu);
 
 		JFileChooser saveLocChooser = new JFileChooser(); // creates file chooser for exporting images
 		saveLocChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); // allows user to view both files and
@@ -200,10 +204,10 @@ public class Display extends Canvas {
 		saveLocChooser.setFileFilter(filter); // apply that filter
 		saveLocChooser.setSelectedFile(new File("image")); // set the suggested file name
 
-		setSaveLocationBtn = new JMenuItem("Set Save Location"); // create button in the file menu to set the save
-																	// location
-		setSaveLocationBtn.setToolTipText("Set the location and file name that images are saved to");
-		setSaveLocationBtn.addActionListener(new ActionListener() { // what happens when the button is pressed
+		setSaveLocationMenuItm = new JMenuItem("Set Save Location"); // create button in the file menu to set the save
+																		// location
+		setSaveLocationMenuItm.setToolTipText("Set the location and file name that images are saved to");
+		setSaveLocationMenuItm.addActionListener(new ActionListener() { // what happens when the button is pressed
 			public void actionPerformed(ActionEvent e) {
 				if (saveLocChooser.showOpenDialog(frame) == 0) { // open the file browser window, if it exits with a
 																	// selected path continue
@@ -212,19 +216,19 @@ public class Display extends Canvas {
 																		// numbers in the title
 					imageIndex = 0; // set the image index back to 0
 					setSaveFile();
-					exportImageBtn.setEnabled(true); // enable the export image button to be pressed
+					exportImageMenuItm.setEnabled(true); // enable the export image button to be pressed
 					System.out.println("save path: " + saveFile.getAbsolutePath());
 					System.out.println("parent path: " + saveFile.getParent());
 				}
 			}
 		});
-		mnFile.add(setSaveLocationBtn); // add the button to the file menu
-		exportImageBtn = new JMenuItem("Export Image"); // button to export the current buffered image
-		exportImageBtn.setToolTipText("Save the current graph as an image in the specified file location");
-		exportImageBtn.setEnabled(false);
-		exportImageBtn.setFocusable(false);
-		mnFile.add(exportImageBtn);
-		exportImageBtn.addActionListener(new ActionListener() {
+		fileMenu.add(setSaveLocationMenuItm); // add the button to the file menu
+		exportImageMenuItm = new JMenuItem("Export Image"); // button to export the current buffered image
+		exportImageMenuItm.setToolTipText("Save the current graph as an image in the specified file location");
+		exportImageMenuItm.setEnabled(false);
+		exportImageMenuItm.setFocusable(false);
+		fileMenu.add(exportImageMenuItm);
+		exportImageMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				exportImage();
 			}
@@ -237,9 +241,9 @@ public class Display extends Canvas {
 		importLocChooser.setApproveButtonText("Open"); // set text on approve button
 		importLocChooser.setFileFilter(filter);
 
-		mntmImportImage = new JMenuItem("Import Image");
-		mntmImportImage.setToolTipText("Set the graph settings to match settings of the imported image.");
-		mntmImportImage.addActionListener(new ActionListener() {
+		importImageMenuItm = new JMenuItem("Import Image");
+		importImageMenuItm.setToolTipText("Set the graph settings to match settings of the imported image.");
+		importImageMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (importLocChooser.showOpenDialog(frame) == 0) { // open the file browser window, if it exits with a
 																	// selected path continue
@@ -248,71 +252,71 @@ public class Display extends Canvas {
 				}
 			}
 		});
-		mnFile.add(mntmImportImage);
+		fileMenu.add(importImageMenuItm);
 
-		mnView = new JMenu("View");
-		menuBar.add(mnView);
+		viewMenu = new JMenu("View");
+		menuBar.add(viewMenu);
 
-		lowPrecisionBtn = new JMenuItem("Low Precision"); // button to enable low precision mode
-		lowPrecisionBtn.setToolTipText(
+		lowPrecisionMenuItm = new JMenuItem("Low Precision"); // button to enable low precision mode
+		lowPrecisionMenuItm.setToolTipText(
 				"Use 64 bit floating point numbers to calculate values, provides quick calculations. Good until 10^14");
-		lowPrecisionBtn.setFocusable(false);
-		lowPrecisionBtn.setEnabled(false);
-		lowPrecisionBtn.addActionListener(new ActionListener() {
+		lowPrecisionMenuItm.setFocusable(false);
+		lowPrecisionMenuItm.setEnabled(false);
+		lowPrecisionMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				lowPrecisionBtn.setEnabled(false);
-				infinitePrecisionBtn.setEnabled(true);
-				highPrecisionBtn.setEnabled(true);
+				lowPrecisionMenuItm.setEnabled(false);
+				infinitePrecisionMenuItm.setEnabled(true);
+				highPrecisionMenuItm.setEnabled(true);
 
 				launcher.setPrecision(Precision.LOW_PRECISION);
 				launcher.refresh();
 			}
 		});
-		mnView.add(lowPrecisionBtn);
+		viewMenu.add(lowPrecisionMenuItm);
 
-		highPrecisionBtn = new JMenuItem("High Precision");
-		mnView.add(highPrecisionBtn);
-		highPrecisionBtn.addActionListener(new ActionListener() {
+		highPrecisionMenuItm = new JMenuItem("High Precision");
+		viewMenu.add(highPrecisionMenuItm);
+		highPrecisionMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				highPrecisionBtn.setEnabled(false);
-				lowPrecisionBtn.setEnabled(true);
-				infinitePrecisionBtn.setEnabled(true);
+				highPrecisionMenuItm.setEnabled(false);
+				lowPrecisionMenuItm.setEnabled(true);
+				infinitePrecisionMenuItm.setEnabled(true);
 
 				launcher.setPrecision(Precision.HIGH_PRECISION);
 				launcher.refresh();
 			}
 		});
 
-		infinitePrecisionBtn = new JMenuItem("Infinite Precision"); // button to enable infinite precision mode
-		infinitePrecisionBtn.setToolTipText(
+		infinitePrecisionMenuItm = new JMenuItem("Infinite Precision"); // button to enable infinite precision mode
+		infinitePrecisionMenuItm.setToolTipText(
 				"Use Java's BigDecimal class in order to generate a graph with much more precice values, allows for a larger scale factor but icreases computation time significantly");
-		infinitePrecisionBtn.setFocusable(false);
-		mnView.add(infinitePrecisionBtn);
-		infinitePrecisionBtn.addActionListener(new ActionListener() {
+		infinitePrecisionMenuItm.setFocusable(false);
+		viewMenu.add(infinitePrecisionMenuItm);
+		infinitePrecisionMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				infinitePrecisionBtn.setEnabled(false);
-				lowPrecisionBtn.setEnabled(true);
-				highPrecisionBtn.setEnabled(true);
+				infinitePrecisionMenuItm.setEnabled(false);
+				lowPrecisionMenuItm.setEnabled(true);
+				highPrecisionMenuItm.setEnabled(true);
 
 				launcher.setPrecision(Precision.INFINITE_PRECISION);
 				launcher.refresh();
 			}
 		});
 
-		mnReset = new JMenu("Reset");
-		mnView.add(mnReset);
+		resetMenu = new JMenu("Reset");
+		viewMenu.add(resetMenu);
 
-		mntmResetScaleOnly = new JMenuItem("Reset scale only");
-		mntmResetScaleOnly.addActionListener(new ActionListener() {
+		resetScaleOnlyMenuItm = new JMenuItem("Reset scale only");
+		resetScaleOnlyMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				launcher.setScale(1);
 				launcher.refresh();
 			}
 		});
-		mnReset.add(mntmResetScaleOnly);
+		resetMenu.add(resetScaleOnlyMenuItm);
 
-		mntmResetPositionOnly = new JMenuItem("Reset position only");
-		mntmResetPositionOnly.addActionListener(new ActionListener() {
+		resetPositionOnlyMenuItm = new JMenuItem("Reset position only");
+		resetPositionOnlyMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				switch (launcher.precision) {
 				case LOW_PRECISION:
@@ -327,19 +331,19 @@ public class Display extends Canvas {
 				launcher.refresh();
 			}
 		});
-		mnReset.add(mntmResetPositionOnly);
+		resetMenu.add(resetPositionOnlyMenuItm);
 
-		mntmResetLimitOnly = new JMenuItem("Reset limit only");
-		mntmResetLimitOnly.addActionListener(new ActionListener() {
+		resetLimitOnlyMenuItm = new JMenuItem("Reset limit only");
+		resetLimitOnlyMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				launcher.setLimit(150);
 				launcher.refresh();
 			}
 		});
-		mnReset.add(mntmResetLimitOnly);
+		resetMenu.add(resetLimitOnlyMenuItm);
 
-		mntmResetAll = new JMenuItem("Reset all");
-		mntmResetAll.addActionListener(new ActionListener() {
+		resetAllMenuItm = new JMenuItem("Reset all");
+		resetAllMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				launcher.setScale(1);
 				switch (launcher.precision) {
@@ -356,136 +360,136 @@ public class Display extends Canvas {
 				launcher.refresh();
 			}
 		});
-		mnReset.add(mntmResetAll);
+		resetMenu.add(resetAllMenuItm);
 
-		mnSetResolution = new JMenu("Set Resolution");
-		mnView.add(mnSetResolution);
-		mnSetResolution.setToolTipText("Set the resolution of the graph.");
+		setResolutionMenu = new JMenu("Set Resolution");
+		viewMenu.add(setResolutionMenu);
+		setResolutionMenu.setToolTipText("Set the resolution of the graph.");
 
-		mntmx = new JMenuItem("256 x 144");
-		mntmx.setToolTipText("114p");
-		mnSetResolution.add(mntmx);
-		mntmx.addActionListener(new ActionListener() {
+		res1MenuItm = new JMenuItem("256 x 144");
+		res1MenuItm.setToolTipText("114p");
+		setResolutionMenu.add(res1MenuItm);
+		res1MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(256, 144);
 			}
 		});
 
-		mntmx_1 = new JMenuItem("426 x 240");
-		mntmx_1.setToolTipText("240p");
-		mnSetResolution.add(mntmx_1);
-		mntmx_1.addActionListener(new ActionListener() {
+		res2MenuItm = new JMenuItem("426 x 240");
+		res2MenuItm.setToolTipText("240p");
+		setResolutionMenu.add(res2MenuItm);
+		res2MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(426, 240);
 			}
 		});
 
-		mntmx_2 = new JMenuItem("640 x 360");
-		mntmx_2.setToolTipText("360p");
-		mnSetResolution.add(mntmx_2);
-		mntmx_2.addActionListener(new ActionListener() {
+		res3MenuItm = new JMenuItem("640 x 360");
+		res3MenuItm.setToolTipText("360p");
+		setResolutionMenu.add(res3MenuItm);
+		res3MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(640, 360);
 			}
 		});
 
-		mntmx_3 = new JMenuItem("854 x 480");
-		mntmx_3.setToolTipText("480p");
-		mnSetResolution.add(mntmx_3);
-		mntmx_3.addActionListener(new ActionListener() {
+		res4MenuItm = new JMenuItem("854 x 480");
+		res4MenuItm.setToolTipText("480p");
+		setResolutionMenu.add(res4MenuItm);
+		res4MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(854, 480);
 			}
 		});
 
-		mntmx_4 = new JMenuItem("1280 x 720");
-		mntmx_4.setToolTipText("720p");
-		mnSetResolution.add(mntmx_4);
-		mntmx_4.addActionListener(new ActionListener() {
+		res5MenuItm = new JMenuItem("1280 x 720");
+		res5MenuItm.setToolTipText("720p");
+		setResolutionMenu.add(res5MenuItm);
+		res5MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(1280, 720);
 			}
 		});
 
-		mntmx_5 = new JMenuItem("1920 x 1080");
-		mntmx_5.setToolTipText("1080p");
-		mnSetResolution.add(mntmx_5);
-		mntmx_5.addActionListener(new ActionListener() {
+		res6MenuItm = new JMenuItem("1920 x 1080");
+		res6MenuItm.setToolTipText("1080p");
+		setResolutionMenu.add(res6MenuItm);
+		res6MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(1920, 1080);
 			}
 		});
 
-		mntmx_6 = new JMenuItem("2560 x 1440");
-		mntmx_6.setToolTipText("1440p");
-		mnSetResolution.add(mntmx_6);
-		mntmx_6.addActionListener(new ActionListener() {
+		res7MenuItm = new JMenuItem("2560 x 1440");
+		res7MenuItm.setToolTipText("1440p");
+		setResolutionMenu.add(res7MenuItm);
+		res7MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(2560, 1440);
 			}
 		});
 
-		mntmx_7 = new JMenuItem("3840 x 2160");
-		mntmx_7.setToolTipText("4k");
-		mnSetResolution.add(mntmx_7);
-		mntmx_7.addActionListener(new ActionListener() {
+		res8MenuItm = new JMenuItem("3840 x 2160");
+		res8MenuItm.setToolTipText("4k");
+		setResolutionMenu.add(res8MenuItm);
+		res8MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(3840, 2160);
 			}
 		});
 
-		mnColorCycling = new JMenu("Color cycling");
-		mnColorCycling.setToolTipText("Cycle the color gradient to create animation");
-		mnView.add(mnColorCycling);
+		colorCyclingMenu = new JMenu("Color cycling");
+		colorCyclingMenu.setToolTipText("Cycle the color gradient to create animation");
+		viewMenu.add(colorCyclingMenu);
 
-		mntmStart = new JMenuItem("Start");
-		mntmStart.addActionListener(new ActionListener() {
+		colorStartMenuItm = new JMenuItem("Start");
+		colorStartMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				colorCycle.startCycle();
-				mntmStart.setEnabled(false);
-				mntmStop.setEnabled(true);
+				colorStartMenuItm.setEnabled(false);
+				colorStopMenuItm.setEnabled(true);
 			}
 		});
-		mnColorCycling.add(mntmStart);
+		colorCyclingMenu.add(colorStartMenuItm);
 
-		mntmStop = new JMenuItem("Stop");
-		mntmStop.setEnabled(false);
-		mntmStop.addActionListener(new ActionListener() {
+		colorStopMenuItm = new JMenuItem("Stop");
+		colorStopMenuItm.setEnabled(false);
+		colorStopMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				colorCycle.stopCycle();
-				mntmStop.setEnabled(false);
-				mntmStart.setEnabled(true);
+				colorStopMenuItm.setEnabled(false);
+				colorStartMenuItm.setEnabled(true);
 			}
 		});
-		mnColorCycling.add(mntmStop);
+		colorCyclingMenu.add(colorStopMenuItm);
 
-		mnColoringMode = new JMenu("Coloring Mode");
-		mnView.add(mnColoringMode);
+		coloringModeMenu = new JMenu("Coloring Mode");
+		viewMenu.add(coloringModeMenu);
 
-		mntmAbsoulteColoring = new JMenuItem("Absolute coloring");
-		mntmAbsoulteColoring.setEnabled(false);
-		mntmAbsoulteColoring.setToolTipText(
+		absoulteColoringMenuItm = new JMenuItem("Absolute coloring");
+		absoulteColoringMenuItm.setEnabled(false);
+		absoulteColoringMenuItm.setToolTipText(
 				"Colors each point based only on the number of iterations. Colors will remain the same as limit changes");
-		mnColoringMode.add(mntmAbsoulteColoring);
-		mntmAbsoulteColoring.addActionListener(new ActionListener() {
+		coloringModeMenu.add(absoulteColoringMenuItm);
+		absoulteColoringMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				absoluteColorMode = true;
-				mntmRelativeColoring.setEnabled(true);
-				mntmAbsoulteColoring.setEnabled(false);
+				relativeColoringMenuItm.setEnabled(true);
+				absoulteColoringMenuItm.setEnabled(false);
 				repaint();
 			}
 		});
 
-		mntmRelativeColoring = new JMenuItem("Relative coloring ");
-		mntmRelativeColoring.setEnabled(true);
-		mntmRelativeColoring.setToolTipText("Colors each point based on how close it got to reaching the limit."
+		relativeColoringMenuItm = new JMenuItem("Relative coloring ");
+		relativeColoringMenuItm.setEnabled(true);
+		relativeColoringMenuItm.setToolTipText("Colors each point based on how close it got to reaching the limit."
 				+ " Therefore colors will change as the limit changes.");
-		mnColoringMode.add(mntmRelativeColoring);
-		mntmRelativeColoring.addActionListener(new ActionListener() {
+		coloringModeMenu.add(relativeColoringMenuItm);
+		relativeColoringMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				absoluteColorMode = false;
-				mntmAbsoulteColoring.setEnabled(true);
-				mntmRelativeColoring.setEnabled(false);
+				absoulteColoringMenuItm.setEnabled(true);
+				relativeColoringMenuItm.setEnabled(false);
 				repaint();
 			}
 		});
