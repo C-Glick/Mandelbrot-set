@@ -64,10 +64,10 @@ public class Launcher {
 		tester = new Tester(); // creates a new tester
 		keyManager = new KeyManager(launcher); // creates a the key listener
 		mouseManager = new MouseManager(launcher);
+		display = new Display(title, width, height, launcher); // create a new display
 
 		launcher.calculate(launcher); // calculate the default values
 
-		display = new Display(title, width, height, launcher); // create a new display
 		display.start(); // run setup on display and make it visible
 		firstBoot = false;
 	}

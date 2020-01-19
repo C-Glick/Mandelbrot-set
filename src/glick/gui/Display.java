@@ -51,8 +51,6 @@ import javax.swing.JOptionPane;
 public class Display extends Canvas {
 	private static final long serialVersionUID = -8947047461955636825L;
 	String title;
-	int width;
-	int height;
 	Launcher launcher;
 	JFrame frame;
 	private Timer resizeTimer;
@@ -117,8 +115,7 @@ public class Display extends Canvas {
 
 	public Display(String title, int width, int height, Launcher launcher) {
 		this.title = title;
-		this.height = height;
-		this.width = width;
+		setSize(width, height);
 		this.launcher = launcher;
 		buffImag = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
@@ -566,8 +563,8 @@ public class Display extends Canvas {
 		topBar.add(timeEstimateDisplay, gbc_timeEstimateDisplay);
 		timeEstimateDisplay.setToolTipText("Estimated amount of time remaining to finish the current calculation.");
 
-		canvas = new Display(title, height, width, launcher); // the canvas that will hold the buffered image
-		canvas.setSize(width, height); // set the canvas width and height
+		canvas = new Display(title, getWidth(), getHeight(), launcher); // the canvas that will hold the buffered image
+		canvas.setSize(getWidth(), getHeight()); // set the canvas width and height
 		canvas.setFocusable(false);
 		canvas.addMouseListener(launcher.getMouseManager());
 		canvas.setCursor(cursor);
@@ -660,8 +657,8 @@ public class Display extends Canvas {
 	 */
 	private void render(Graphics frameG) { // this render method is called from the display class after the canvas is
 											// visible, or when repainting the canvas
-		for (int x = 0; x < width; x++) { // loop through all x and y values
-			for (int y = 0; y < height; y++) {
+		for (int x = 0; x < getWidth(); x++) { // loop through all x and y values
+			for (int y = 0; y < getHeight(); y++) {
 
 				double result = launcher.getResultsArray()[x][y]; // get the result of the complex number at each pixel
 																	// location
@@ -714,14 +711,14 @@ public class Display extends Canvas {
 			resumeColorCycle = true;
 		}
 
-		for (int x = 0; x < width; x++) { // loop through all x and y values
-			for (int y = 0; y < height; y++) {
+		for (int x = 0; x < getWidth(); x++) { // loop through all x and y values
+			for (int y = 0; y < getHeight(); y++) {
 				launcher.getResultsArray()[x][y] = 0;
 			}
 		}
 
-		width = newX;
-		height = newY;
+		setSize(newX, newY);
+
 		launcher.setResultsArray(new double[newX][newY]);
 		buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 
@@ -748,16 +745,17 @@ public class Display extends Canvas {
 		}
 
 		// clear graph
-		for (int x = 0; x < width; x++) { // loop through all x and y values
-			for (int y = 0; y < height; y++) {
+		for (int x = 0; x < getWidth(); x++) { // loop through all x and y values
+			for (int y = 0; y < getHeight(); y++) {
 				launcher.getResultsArray()[x][y] = 0;
 			}
 		}
 
 		int newX = canvas.getWidth();
 		int newY = canvas.getHeight();
-		width = newX;
-		height = newY;
+
+		setSize(newX, newY);
+
 		launcher.setResultsArray(new double[newX][newY]);
 		buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 
@@ -998,13 +996,5 @@ public class Display extends Canvas {
 			System.out.println("ERROR: import image could not be found" + e);
 			JOptionPane.showMessageDialog(null, "Error, import image could not be found" + e);
 		}
-	}
-
-	public int getWidth() {
-		return width;
-	}
-
-	public int getHeight() {
-		return height;
 	}
 }
