@@ -1,10 +1,11 @@
+package glick.gui;
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.colorchooser.*;
 
 public class GradientEditor extends JPanel implements ChangeListener {
+	private static final long serialVersionUID = -7870220765634171353L;
+
 	JFrame frame;
 
 	/* ColorChooserDemo.java requires no other files. */

@@ -1,7 +1,8 @@
+package glick.gui;
+
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -16,6 +17,11 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.w3c.dom.Node;
+
+import glick.Launcher;
+import glick.lib.Precision;
+import glick.lib.BigComplex;
+import glick.lib.Complex;
 
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -43,6 +49,7 @@ import javax.swing.JOptionPane;
 
 //this class handles the display window that the game runs it
 public class Display extends Canvas {
+	private static final long serialVersionUID = -8947047461955636825L;
 	String title;
 	int width;
 	int height;
@@ -52,6 +59,7 @@ public class Display extends Canvas {
 	boolean autoResize = true;
 	Canvas canvas;
 	Graphics canvasG;
+	static BufferedImage buffImag;
 
 	boolean absoluteColorMode;
 	Gradient gradient;
@@ -69,7 +77,7 @@ public class Display extends Canvas {
 	JLabel limitDisplay;
 	JLabel centerXDisplay;
 	JLabel centerYDisplay;
-	JProgressBar progressBar;
+	public JProgressBar progressBar;
 
 	private GradientEditor picker;
 
@@ -82,7 +90,7 @@ public class Display extends Canvas {
 	private JMenu mnFile;
 	private JMenuItem setSaveLocationBtn;
 	private JMenuItem exportImageBtn;
-	JLabel timeEstimateDisplay;
+	public JLabel timeEstimateDisplay;
 	private JMenu mnView;
 	private JMenu mnReset;
 	private JMenuItem mntmResetScaleOnly;
@@ -99,7 +107,6 @@ public class Display extends Canvas {
 	private JMenuItem mntmx_5;
 	private JMenuItem mntmx_6;
 	private JMenuItem mntmx_7;
-	private JMenuItem mntmColorCycle;
 	private JMenu mnColorCycling;
 	private JMenuItem mntmStart;
 	private JMenuItem mntmStop;
@@ -108,11 +115,12 @@ public class Display extends Canvas {
 	private JMenuItem mntmRelativeColoring;
 	private JMenuItem highPrecisionBtn;
 
-	Display(String title, int width, int height, Launcher launcher) {
+	public Display(String title, int width, int height, Launcher launcher) {
 		this.title = title;
 		this.height = height;
 		this.width = width;
 		this.launcher = launcher;
+		buffImag = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
 		try {
 			UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -259,7 +267,7 @@ public class Display extends Canvas {
 				infinitePrecisionBtn.setEnabled(true);
 				highPrecisionBtn.setEnabled(true);
 
-				launcher.setPrecision(Launcher.Precision.LOW_PRECISION);
+				launcher.setPrecision(Precision.LOW_PRECISION);
 				launcher.refresh();
 			}
 		});
@@ -273,7 +281,7 @@ public class Display extends Canvas {
 				lowPrecisionBtn.setEnabled(true);
 				infinitePrecisionBtn.setEnabled(true);
 
-				launcher.setPrecision(Launcher.Precision.HIGH_PRECISION);
+				launcher.setPrecision(Precision.HIGH_PRECISION);
 				launcher.refresh();
 			}
 		});
@@ -289,7 +297,7 @@ public class Display extends Canvas {
 				lowPrecisionBtn.setEnabled(true);
 				highPrecisionBtn.setEnabled(true);
 
-				launcher.setPrecision(Launcher.Precision.INFINITE_PRECISION);
+				launcher.setPrecision(Precision.INFINITE_PRECISION);
 				launcher.refresh();
 			}
 		});
@@ -505,8 +513,9 @@ public class Display extends Canvas {
 		gbc_scale.gridy = 0;
 		topBar.add(scaleDisplay, gbc_scale);
 
-		centerXDisplay = new JLabel("X = " + Launcher.center.getReal()); // create JLabel for displaying the current x
-																			// value
+		centerXDisplay = new JLabel("X = " + launcher.getCenter().getReal()); // create JLabel for displaying the
+																				// current x
+																				// value
 		centerXDisplay.setFont(font);
 		GridBagConstraints gbc_centerXDisplay = new GridBagConstraints();
 		gbc_centerXDisplay.anchor = GridBagConstraints.WEST;
@@ -516,7 +525,7 @@ public class Display extends Canvas {
 		centerXDisplay.setToolTipText("Center X value");
 		topBar.add(centerXDisplay, gbc_centerXDisplay);
 
-		centerYDisplay = new JLabel("Y = " + Launcher.center.getImag()); // JLabel to display the center y value
+		centerYDisplay = new JLabel("Y = " + launcher.getCenter().getImag()); // JLabel to display the center y value
 		centerYDisplay.setFont(font);
 		GridBagConstraints gbc_centerYDisplay = new GridBagConstraints();
 		gbc_centerYDisplay.anchor = GridBagConstraints.WEST;
@@ -587,20 +596,20 @@ public class Display extends Canvas {
 		case LOW_PRECISION:
 			scaleDisplay.setText("Scale = " + launcher.getScale());
 			limitDisplay.setText("Limit = " + launcher.getLimit());
-			centerXDisplay.setText("X = " + Launcher.center.real);
-			centerYDisplay.setText("Y = " + Launcher.center.imag);
+			centerXDisplay.setText("X = " + launcher.getCenter().getReal());
+			centerYDisplay.setText("Y = " + launcher.getCenter().getImag());
 			break;
 		case HIGH_PRECISION:
-			scaleDisplay.setText("Scale = " + Launcher.scaleHP);
-			limitDisplay.setText("Limit = " + Launcher.limit);
-			centerXDisplay.setText("X = " + Launcher.centerHP.real);
-			centerYDisplay.setText("Y = " + Launcher.centerHP.imag);
+			scaleDisplay.setText("Scale = " + launcher.getScaleHP());
+			limitDisplay.setText("Limit = " + launcher.getLimit());
+			centerXDisplay.setText("X = " + launcher.getCenterHP().getReal());
+			centerYDisplay.setText("Y = " + launcher.getCenterHP().getImag());
 			break;
 		case INFINITE_PRECISION:
-			scaleDisplay.setText("Scale = " + Launcher.scaleIP);
-			limitDisplay.setText("Limit = " + Launcher.limit);
-			centerXDisplay.setText("X = " + Launcher.centerIP.real);
-			centerYDisplay.setText("Y = " + Launcher.centerIP.imag);
+			scaleDisplay.setText("Scale = " + launcher.getScaleIP());
+			limitDisplay.setText("Limit = " + launcher.getLimit());
+			centerXDisplay.setText("X = " + launcher.getCenterIP().getReal());
+			centerYDisplay.setText("Y = " + launcher.getCenterIP().getImag());
 			break;
 		}
 
@@ -651,45 +660,49 @@ public class Display extends Canvas {
 	 */
 	private void render(Graphics frameG) { // this render method is called from the display class after the canvas is
 											// visible, or when repainting the canvas
-		for (int x = 0; x < Launcher.width; x++) { // loop through all x and y values
-			for (int y = 0; y < Launcher.height; y++) {
+		for (int x = 0; x < width; x++) { // loop through all x and y values
+			for (int y = 0; y < height; y++) {
 
-				double result = Launcher.resultsArray[x][y]; // get the result of the complex number at each pixel
-																// location
+				double result = launcher.getResultsArray()[x][y]; // get the result of the complex number at each pixel
+																	// location
 				if (result == 0) { // is in set
-					Launcher.buffImag.setRGB(x, y, Color.BLACK.getRGB());
+					buffImag.setRGB(x, y, Color.BLACK.getRGB());
 				} else if (absoluteColorMode) {
 					// set the color by creating a HSB color, set the hue to be the result(number of
 					// iterations to reach threshold) divided by 100,
 					// set the pixel color of the buffered image accordingly
-					Launcher.buffImag.setRGB(x, y, gradient.getColor((float) result / 200 + colorOffset).getRGB()); // set
-																													// the
-																													// pixel
-																													// color
-																													// of
-																													// the
-																													// buffered
-																													// image
-																													// accordingly
+					buffImag.setRGB(x, y, gradient.getColor((float) result / 200 + colorOffset).getRGB()); // set
+																											// the
+																											// pixel
+																											// color
+																											// of
+																											// the
+																											// buffered
+																											// image
+																											// accordingly
 				} else {
 					// set the color by creating a HSB color, set the hue to be the result(number of
 					// iterations to reach threshold) divided by the limit (max number of
 					// iterations),
 					// set the pixel color of the buffered image accordingly
-					Launcher.buffImag.setRGB(x, y,
-							gradient.getColor((float) result / Launcher.limit + colorOffset).getRGB()); // set the pixel
-																										// color of the
-																										// buffered
-																										// image
-																										// accordingly
+					buffImag.setRGB(x, y,
+							gradient.getColor((float) result / launcher.getLimit() + colorOffset).getRGB()); // set
+																												// the
+																												// pixel
+																												// color
+																												// of
+																												// the
+																												// buffered
+																												// image
+																												// accordingly
 				}
 			}
 		}
-		frameG.drawImage(Launcher.buffImag, 0, 0, null); // draw the buffered image to the canvas
+		frameG.drawImage(buffImag, 0, 0, null); // draw the buffered image to the canvas
 
 		// TODO: create grid display
-		if (Launcher.enableGrid) {
-		}
+		// if (launcher.enableGrid) {
+		// }
 	}
 
 	public void resizeGraph(int newX, int newY) {
@@ -701,16 +714,16 @@ public class Display extends Canvas {
 			resumeColorCycle = true;
 		}
 
-		for (int x = 0; x < Launcher.width; x++) { // loop through all x and y values
-			for (int y = 0; y < Launcher.height; y++) {
-				Launcher.resultsArray[x][y] = 0;
+		for (int x = 0; x < width; x++) { // loop through all x and y values
+			for (int y = 0; y < height; y++) {
+				launcher.getResultsArray()[x][y] = 0;
 			}
 		}
 
-		Launcher.width = newX;
-		Launcher.height = newY;
-		Launcher.resultsArray = new double[newX][newY];
-		Launcher.buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
+		width = newX;
+		height = newY;
+		launcher.setResultsArray(new double[newX][newY]);
+		buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 
 		canvas.setSize(newX, newY);
 		// if shrinking, force frame to fit the canvas rather than the GUI
@@ -735,18 +748,18 @@ public class Display extends Canvas {
 		}
 
 		// clear graph
-		for (int x = 0; x < Launcher.width; x++) { // loop through all x and y values
-			for (int y = 0; y < Launcher.height; y++) {
-				Launcher.resultsArray[x][y] = 0;
+		for (int x = 0; x < width; x++) { // loop through all x and y values
+			for (int y = 0; y < height; y++) {
+				launcher.getResultsArray()[x][y] = 0;
 			}
 		}
 
 		int newX = canvas.getWidth();
 		int newY = canvas.getHeight();
-		Launcher.width = newX;
-		Launcher.height = newY;
-		Launcher.resultsArray = new double[newX][newY];
-		Launcher.buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
+		width = newX;
+		height = newY;
+		launcher.setResultsArray(new double[newX][newY]);
+		buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 
 		launcher.refresh();
 
@@ -787,18 +800,18 @@ public class Display extends Canvas {
 			writer.setOutput(ios); // set the writer to use the previously created output stream
 
 			ImageWriteParam param = writer.getDefaultWriteParam(); // get the default parameters for the writer
-			ImageTypeSpecifier type = new ImageTypeSpecifier(Launcher.buffImag); // get the image type from the buffered
-																					// image
+			ImageTypeSpecifier type = new ImageTypeSpecifier(buffImag); // get the image type from the buffered
+																		// image
 
 			IIOMetadata imgMetadata = writer.getDefaultImageMetadata(type, param); // get the default metadata for that
 																					// image type and writer parameters
 
 			imgMetadata = upgradeMetadata(imgMetadata); // upgrade the metadata to save the graph settings
 
-			IIOImage iio_img = new IIOImage(Launcher.buffImag, null, imgMetadata); // create an IIOImage which
-																					// encapsulates the buffered image,
-																					// any thumbnails (not being used),
-																					// and the appropriate metadata
+			IIOImage iio_img = new IIOImage(buffImag, null, imgMetadata); // create an IIOImage which
+																			// encapsulates the buffered image,
+																			// any thumbnails (not being used),
+																			// and the appropriate metadata
 			writer.write(iio_img); // save the IIOImage to disk
 			ios.flush(); // clean up and close down the output stream
 			ios.close();
@@ -893,23 +906,23 @@ public class Display extends Canvas {
 		// (name) and a value
 		IIOMetadataNode centerXNode = new IIOMetadataNode("tEXtEntry");
 		centerXNode.setAttribute("keyword", "centerX");
-		centerXNode.setAttribute("value", Double.toString(Launcher.center.getReal()));
+		centerXNode.setAttribute("value", Double.toString(launcher.getCenter().getReal()));
 
 		IIOMetadataNode centerYNode = new IIOMetadataNode("tEXtEntry");
 		centerYNode.setAttribute("keyword", "centerY");
-		centerYNode.setAttribute("value", Double.toString(Launcher.center.getImag()));
+		centerYNode.setAttribute("value", Double.toString(launcher.getCenter().getImag()));
 
 		IIOMetadataNode scaleNode = new IIOMetadataNode("tEXtEntry");
 		scaleNode.setAttribute("keyword", "scale");
-		scaleNode.setAttribute("value", Double.toString(Launcher.scale));
+		scaleNode.setAttribute("value", Double.toString(launcher.getScale()));
 
 		IIOMetadataNode limitNode = new IIOMetadataNode("tEXtEntry");
 		limitNode.setAttribute("keyword", "limit");
-		limitNode.setAttribute("value", Double.toString(Launcher.limit));
+		limitNode.setAttribute("value", Double.toString(launcher.getLimit()));
 
 		IIOMetadataNode thresholdNode = new IIOMetadataNode("tEXtEntry");
 		thresholdNode.setAttribute("keyword", "threshold");
-		thresholdNode.setAttribute("value", Double.toString(Launcher.threshold));
+		thresholdNode.setAttribute("value", Double.toString(launcher.getThreshold()));
 
 		// append the all the data nodes to the textNode
 		textNode.appendChild(centerXNode);
@@ -985,5 +998,13 @@ public class Display extends Canvas {
 			System.out.println("ERROR: import image could not be found" + e);
 			JOptionPane.showMessageDialog(null, "Error, import image could not be found" + e);
 		}
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
 	}
 }

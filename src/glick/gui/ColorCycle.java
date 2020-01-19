@@ -1,3 +1,4 @@
+package glick.gui;
 import java.util.Date;
 
 /**
