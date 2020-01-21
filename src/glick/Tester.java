@@ -1,11 +1,7 @@
 package glick;
 
-import java.awt.Cursor;
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.time.Duration;
-import java.util.Date;
-import java.util.Timer;
 import java.util.concurrent.ForkJoinPool;
 
 import glick.lib.BigComplex;

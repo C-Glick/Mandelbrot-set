@@ -11,19 +11,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 public class GradientEditor extends JPanel {
+	private static final long serialVersionUID = 3047852835225046501L;
 	/** The list of control points */
 	// private ArrayList list = new ArrayList();
 
