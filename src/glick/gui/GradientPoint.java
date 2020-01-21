@@ -1,3 +1,5 @@
+package glick.gui;
+
 import java.awt.Color;
 
 /**
@@ -29,6 +31,10 @@ public class GradientPoint implements Comparable<GradientPoint> {
 		return position;
 	}
 
+	public Color getColor() {
+		return new Color(r, g, b);
+	}
+
 	public int getR() {
 		return r;
 	}
@@ -43,6 +49,12 @@ public class GradientPoint implements Comparable<GradientPoint> {
 
 	public void setPosition(float position) {
 		this.position = position;
+	}
+
+	public void setColor(Color c) {
+		r = c.getRed();
+		g = c.getGreen();
+		b = c.getBlue();
 	}
 
 	public void setR(int r) {
@@ -61,7 +73,11 @@ public class GradientPoint implements Comparable<GradientPoint> {
 	 * Compares two GradientPoint objects to allow for sorting.
 	 */
 	public int compareTo(GradientPoint otherPoint) {
-		return (int) (this.position - otherPoint.getPosition());
+		return this.position.compareTo(otherPoint.getPosition());
+	}
+
+	public String toString() {
+		return ("Pos:" + position + " R:" + r + " G:" + g + " B:" + b);
 	}
 
 }
