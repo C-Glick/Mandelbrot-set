@@ -32,9 +32,9 @@ public class GradientEditor extends JPanel {
 	/** A button to edit a control point */
 	private JButton edit = new JButton("Edit");
 	/** A button to delete a control point */
-	private JButton del = new JButton("Del");
+	private JButton del = new JButton("Delete");
 	/** A button to apply the current gradient to the graph */
-	private JButton apply = new JButton("apply");
+	private JButton apply = new JButton("Apply");
 
 	/** The x position of the gradient bar */
 	private int x;

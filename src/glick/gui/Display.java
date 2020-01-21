@@ -257,6 +257,7 @@ public class Display extends Canvas {
 		gradientPanel.add(gradientEditor);
 		gradientFrame.setSize(300, 200);
 		gradientFrame.setLocationRelativeTo(frame);
+		gradientFrame.setTitle("Gradient Editor");
 		gradientFrame.setVisible(false);
 
 		importImageMenuItm = new JMenuItem("Import Image");
