@@ -257,7 +257,7 @@ public class Display extends Canvas {
 		gradientPanel.add(gradientEditor);
 		gradientFrame.setSize(300, 200);
 		gradientFrame.setLocationRelativeTo(frame);
-		gradientFrame.setVisible(true);
+		gradientFrame.setVisible(false);
 
 		importImageMenuItm = new JMenuItem("Import Image");
 		importImageMenuItm.setToolTipText("Set the graph settings to match settings of the imported image.");
