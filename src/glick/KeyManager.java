@@ -1,4 +1,5 @@
 package glick;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.math.BigDecimal;
@@ -81,41 +82,41 @@ public class KeyManager implements KeyListener {
 
 	public void zoomIn() {
 		launcher.setScale(launcher.getScale() * 2);
-		launcher.refresh();
+		launcher.getDisplay().refresh();
 	}
 
 	public void zoomInHP() {
 		launcher.setScaleHP(launcher.getScaleHP().multiply(DoubleDouble.valueOf(2)));
-		launcher.refresh();
+		launcher.getDisplay().refresh();
 	}
 
 	public void zoomInIP() {
 		launcher.setScaleIP(launcher.getScaleIP().multiply(new BigDecimal(2), Launcher.rMode));
-		launcher.refresh();
+		launcher.getDisplay().refresh();
 	}
 
 	public void zoomOut() {
 		launcher.setScale(launcher.getScale() / 2);
-		launcher.refresh();
+		launcher.getDisplay().refresh();
 	}
 
 	public void zoomOutHP() {
 		launcher.setScaleHP(launcher.getScaleHP().divide(DoubleDouble.valueOf(2)));
-		launcher.refresh();
+		launcher.getDisplay().refresh();
 	}
 
 	public void zoomOutIP() {
 		launcher.setScaleIP(launcher.getScaleIP().divide(new BigDecimal(2), Launcher.rMode));
-		launcher.refresh();
+		launcher.getDisplay().refresh();
 	}
 
 	public void limitUp() {
 		launcher.setLimit(launcher.getLimit() + 50);
-		launcher.refresh();
+		launcher.getDisplay().refresh();
 	}
 
 	public void limitDown() {
 		launcher.setLimit(launcher.getLimit() - 50);
-		launcher.refresh();
+		launcher.getDisplay().refresh();
 	}
 }

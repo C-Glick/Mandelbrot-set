@@ -19,6 +19,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.w3c.dom.Node;
 
 import glick.Launcher;
+import glick.Updater;
 import glick.lib.Precision;
 import glick.lib.BigComplex;
 import glick.lib.Complex;
@@ -30,6 +31,7 @@ import java.awt.Insets;
 import javax.imageio.*;
 import javax.imageio.stream.*;
 import javax.imageio.metadata.*;
+import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 
 import java.awt.event.ActionListener;
@@ -58,10 +60,13 @@ public class Display extends Canvas {
 	Canvas canvas;
 	Graphics canvasG;
 	static BufferedImage buffImag;
+	public boolean isUpdaterWorking;
 
 	boolean absoluteColorMode;
 	Gradient gradient;
-	private GradientEditor picker;
+	private GradientEditor gradientEditor;
+	public JFrame gradientFrame;
+	private JPanel gradientPanel;
 	double colorOffset;
 	ColorCycle colorCycle;
 
@@ -109,6 +114,8 @@ public class Display extends Canvas {
 	private JMenuItem res7MenuItm;
 	private JMenuItem res8MenuItm;
 
+	private JMenuItem gradientEditorMenuItm;
+
 	private JMenu colorCyclingMenu;
 	private JMenuItem colorStartMenuItm;
 	private JMenuItem colorStopMenuItm;
@@ -135,11 +142,8 @@ public class Display extends Canvas {
 
 		absoluteColorMode = true;
 
-		picker = new GradientEditor();
-		picker.createAndShowGUI();
-
 		// create the default gradient
-		gradient = new Gradient();
+		gradient = new Gradient(this);
 
 		gradient.addPoint(new GradientPoint(Color.RED, 0));
 		gradient.addPoint(new GradientPoint(Color.ORANGE, 0.1f));
@@ -241,6 +245,20 @@ public class Display extends Canvas {
 		importLocChooser.setApproveButtonText("Open"); // set text on approve button
 		importLocChooser.setFileFilter(filter);
 
+		// gradient editor setup
+		gradientFrame = new JFrame();
+		gradientPanel = new JPanel();
+		gradientPanel.setBorder(BorderFactory.createTitledBorder("Gradient"));
+		gradientPanel.setLayout(null);
+		gradientFrame.setContentPane(gradientPanel);
+
+		gradientEditor = new GradientEditor(gradient);
+		gradientEditor.setBounds(10, 15, 270, 140);
+		gradientPanel.add(gradientEditor);
+		gradientFrame.setSize(300, 200);
+		gradientFrame.setLocationRelativeTo(frame);
+		gradientFrame.setVisible(true);
+
 		importImageMenuItm = new JMenuItem("Import Image");
 		importImageMenuItm.setToolTipText("Set the graph settings to match settings of the imported image.");
 		importImageMenuItm.addActionListener(new ActionListener() {
@@ -269,7 +287,7 @@ public class Display extends Canvas {
 				highPrecisionMenuItm.setEnabled(true);
 
 				launcher.setPrecision(Precision.LOW_PRECISION);
-				launcher.refresh();
+				refresh();
 			}
 		});
 		viewMenu.add(lowPrecisionMenuItm);
@@ -283,7 +301,7 @@ public class Display extends Canvas {
 				infinitePrecisionMenuItm.setEnabled(true);
 
 				launcher.setPrecision(Precision.HIGH_PRECISION);
-				launcher.refresh();
+				refresh();
 			}
 		});
 
@@ -299,7 +317,7 @@ public class Display extends Canvas {
 				highPrecisionMenuItm.setEnabled(true);
 
 				launcher.setPrecision(Precision.INFINITE_PRECISION);
-				launcher.refresh();
+				refresh();
 			}
 		});
 
@@ -310,7 +328,7 @@ public class Display extends Canvas {
 		resetScaleOnlyMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				launcher.setScale(1);
-				launcher.refresh();
+				refresh();
 			}
 		});
 		resetMenu.add(resetScaleOnlyMenuItm);
@@ -328,7 +346,7 @@ public class Display extends Canvas {
 					launcher.setCenterIP(new BigComplex(BigDecimal.ZERO, BigDecimal.ZERO));
 					break;
 				}
-				launcher.refresh();
+				refresh();
 			}
 		});
 		resetMenu.add(resetPositionOnlyMenuItm);
@@ -337,7 +355,7 @@ public class Display extends Canvas {
 		resetLimitOnlyMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				launcher.setLimit(150);
-				launcher.refresh();
+				refresh();
 			}
 		});
 		resetMenu.add(resetLimitOnlyMenuItm);
@@ -357,7 +375,7 @@ public class Display extends Canvas {
 					break;
 				}
 				launcher.setLimit(150);
-				launcher.refresh();
+				refresh();
 			}
 		});
 		resetMenu.add(resetAllMenuItm);
@@ -437,6 +455,15 @@ public class Display extends Canvas {
 				resizeGraph(3840, 2160);
 			}
 		});
+
+		gradientEditorMenuItm = new JMenuItem("Gradient Editor");
+		gradientEditorMenuItm.setToolTipText("Edit the gradient used to display the graph");
+		gradientEditorMenuItm.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				gradientFrame.setVisible(true);
+			}
+		});
+		viewMenu.add(gradientEditorMenuItm);
 
 		colorCyclingMenu = new JMenu("Color cycling");
 		colorCyclingMenu.setToolTipText("Cycle the color gradient to create animation");
@@ -580,6 +607,13 @@ public class Display extends Canvas {
 		frame.setLocationRelativeTo(null); // center window
 		frame.setVisible(true); // make everything visible
 		canvasG = canvas.getGraphics(); // save the canvas's graphics object for later use when redrawing the canvas
+	}
+
+	public void refresh() {
+		if (!isUpdaterWorking) {
+			Updater updater = new Updater(launcher);
+			updater.start();
+		}
 	}
 
 	public void setColorOffset(double value) {
@@ -734,7 +768,7 @@ public class Display extends Canvas {
 			frame.pack();
 		}
 
-		launcher.refresh();
+		refresh();
 		if (resumeColorCycle) { // start color cycling again
 			colorCycle.startCycle();
 		}
@@ -763,7 +797,7 @@ public class Display extends Canvas {
 		launcher.setResultsArray(new double[newX][newY]);
 		buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 
-		launcher.refresh();
+		refresh();
 
 		if (resumeColorCycle) { // start color cycling again
 			colorCycle.startCycle();
@@ -994,7 +1028,7 @@ public class Display extends Canvas {
 			}
 			iis.flush(); // clean up the input stream
 			iis.close();
-			launcher.refresh(); // refresh/update the graph
+			refresh(); // refresh/update the graph
 
 		} catch (IOException e) {
 			System.out.println("ERROR: import image could not be found" + e);

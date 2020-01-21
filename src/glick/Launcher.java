@@ -23,7 +23,6 @@ public class Launcher {
 	static double[][] resultsArray = new double[width][height];
 	static Complex topLeft;
 	static Complex bottomRight;
-	boolean isUpdaterWorking;
 	static boolean firstBoot = true;
 
 	static boolean enableGrid = false;
@@ -70,13 +69,6 @@ public class Launcher {
 
 		display.start(); // run setup on display and make it visible
 		firstBoot = false;
-	}
-
-	public void refresh() {
-		if (!isUpdaterWorking) {
-			Updater updater = new Updater(this);
-			updater.start();
-		}
 	}
 
 	/**

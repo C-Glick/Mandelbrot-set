@@ -1,4 +1,5 @@
 package glick.gui;
+
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,12 +12,14 @@ import java.util.Collections;
  */
 public class Gradient {
 	ArrayList<GradientPoint> listOfPoints;
+	Display display;
 
 	/**
 	 * Create an empty gradient
 	 */
-	public Gradient() {
+	public Gradient(Display display) {
 		listOfPoints = new ArrayList<GradientPoint>();
+		this.display = display;
 	}
 
 	/**
@@ -25,11 +28,12 @@ public class Gradient {
 	 * @param point1 The left most point
 	 * @param point2 The right most point
 	 */
-	public Gradient(GradientPoint point1, GradientPoint point2) {
+	public Gradient(GradientPoint point1, GradientPoint point2, Display display) {
 		listOfPoints = new ArrayList<GradientPoint>();
 		listOfPoints.add(point1);
 		listOfPoints.add(point2);
-		Collections.sort(listOfPoints);
+		sortList();
+		this.display = display;
 	}
 
 	/**
@@ -41,7 +45,12 @@ public class Gradient {
 	 */
 	public void addPoint(GradientPoint point) {
 		listOfPoints.add(point);
-		Collections.sort(listOfPoints);
+		sortList();
+	}
+
+	public void removePoint(GradientPoint point) {
+		listOfPoints.remove(point);
+		sortList();
 	}
 
 	/**
@@ -88,6 +97,14 @@ public class Gradient {
 			position = normalize(position);
 		}
 		return position;
+	}
+
+	public void sortList() {
+		Collections.sort(listOfPoints);
+	}
+
+	public Display getDisplay() {
+		return display;
 	}
 
 }

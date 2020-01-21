@@ -8,7 +8,7 @@ public class Updater extends Thread {
 	}
 
 	public void run() {
-		launcher.isUpdaterWorking = true;
+		launcher.getDisplay().isUpdaterWorking = true;
 		// launcher.display.progressBar.setIndeterminate(true);
 		Launcher.display.updateUI();
 		System.out.println("clac");
@@ -16,7 +16,7 @@ public class Updater extends Thread {
 		System.out.println("paint");
 		launcher.getDisplay().repaint();
 		// launcher.display.progressBar.setIndeterminate(false);
-		launcher.isUpdaterWorking = false;
+		launcher.getDisplay().isUpdaterWorking = false;
 	}
 
 }

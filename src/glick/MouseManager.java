@@ -18,15 +18,15 @@ public class MouseManager implements MouseListener {
 		switch (launcher.precision) {
 		case LOW_PRECISION:
 			launcher.setCenter(event.getX(), event.getY());
-			launcher.refresh();
+			launcher.getDisplay().refresh();
 			break;
 		case HIGH_PRECISION:
 			launcher.setCenterHP(event.getX(), event.getY());
-			launcher.refresh();
+			launcher.getDisplay().refresh();
 			break;
 		case INFINITE_PRECISION:
 			launcher.setCenterIP(event.getX(), event.getY());
-			launcher.refresh();
+			launcher.getDisplay().refresh();
 			break;
 		}
 	}
