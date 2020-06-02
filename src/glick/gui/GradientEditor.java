@@ -367,6 +367,5 @@ public class GradientEditor extends JPanel {
 
 	private void applyGradient() {
 		gradient.getDisplay().refresh();
-		gradient.getDisplay().gradientFrame.setVisible(false);
 	}
 }

@@ -20,6 +20,7 @@ import org.w3c.dom.Node;
 
 import glick.Launcher;
 import glick.Updater;
+import glick.gui.videoExport.AutomaticController;
 import glick.lib.Precision;
 import glick.lib.BigComplex;
 import glick.lib.Complex;
@@ -53,7 +54,7 @@ import javax.swing.JOptionPane;
 public class Display extends Canvas {
 	private static final long serialVersionUID = -8947047461955636825L;
 	String title;
-	Launcher launcher;
+	private Launcher launcher;
 	JFrame frame;
 	private Timer resizeTimer;
 	boolean autoResize = true;
@@ -69,6 +70,8 @@ public class Display extends Canvas {
 	private JPanel gradientPanel;
 	double colorOffset;
 	ColorCycle colorCycle;
+
+	AutomaticController autoControl;
 
 	String OS = System.getProperty("os.name");
 	File userSaveFile; // the file location with no numbering
@@ -123,6 +126,8 @@ public class Display extends Canvas {
 	private JMenu coloringModeMenu;
 	private JMenuItem absoulteColoringMenuItm;
 	private JMenuItem relativeColoringMenuItm;
+	private JMenu mnVideoExport;
+	private JMenuItem videoExportMenuItm;
 
 	public Display(String title, int width, int height, Launcher launcher) {
 		this.title = title;
@@ -161,6 +166,13 @@ public class Display extends Canvas {
 		colorOffset = 0;
 		colorCycle = new ColorCycle(0.005, this);
 
+		autoControl = new AutomaticController(this);
+		// test zoom
+		autoControl.setLength(3);
+		autoControl.getScaleTimeline().add(1, 0);
+		autoControl.getLimitTimeline().add(150, 0);
+		autoControl.getScaleTimeline().add(10, 90);
+
 	}
 
 	/**
@@ -170,7 +182,7 @@ public class Display extends Canvas {
 		frame = new JFrame(title); // create the main window
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // exits the program when window is closed
 		frame.setBackground(Color.BLACK);
-		frame.addKeyListener(launcher.getKeyManager()); // add key manager to main window
+		frame.addKeyListener(getLauncher().getKeyManager()); // add key manager to main window
 		frame.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent componentEvent) {
 				if (!autoResize) { // prevents resize loop when using set resolutions
@@ -221,6 +233,7 @@ public class Display extends Canvas {
 					imageIndex = 0; // set the image index back to 0
 					setSaveFile();
 					exportImageMenuItm.setEnabled(true); // enable the export image button to be pressed
+					videoExportMenuItm.setEnabled(true);
 					System.out.println("save path: " + saveFile.getAbsolutePath());
 					System.out.println("parent path: " + saveFile.getParent());
 				}
@@ -273,6 +286,15 @@ public class Display extends Canvas {
 		});
 		fileMenu.add(importImageMenuItm);
 
+		videoExportMenuItm = new JMenuItem("Video Export");
+		videoExportMenuItm.setEnabled(false);
+		videoExportMenuItm.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				autoControl.run();
+			}
+		});
+		fileMenu.add(videoExportMenuItm);
+
 		viewMenu = new JMenu("View");
 		menuBar.add(viewMenu);
 
@@ -287,7 +309,7 @@ public class Display extends Canvas {
 				infinitePrecisionMenuItm.setEnabled(true);
 				highPrecisionMenuItm.setEnabled(true);
 
-				launcher.setPrecision(Precision.LOW_PRECISION);
+				getLauncher().setPrecision(Precision.LOW_PRECISION);
 				refresh();
 			}
 		});
@@ -301,7 +323,7 @@ public class Display extends Canvas {
 				lowPrecisionMenuItm.setEnabled(true);
 				infinitePrecisionMenuItm.setEnabled(true);
 
-				launcher.setPrecision(Precision.HIGH_PRECISION);
+				getLauncher().setPrecision(Precision.HIGH_PRECISION);
 				refresh();
 			}
 		});
@@ -317,7 +339,7 @@ public class Display extends Canvas {
 				lowPrecisionMenuItm.setEnabled(true);
 				highPrecisionMenuItm.setEnabled(true);
 
-				launcher.setPrecision(Precision.INFINITE_PRECISION);
+				getLauncher().setPrecision(Precision.INFINITE_PRECISION);
 				refresh();
 			}
 		});
@@ -328,7 +350,7 @@ public class Display extends Canvas {
 		resetScaleOnlyMenuItm = new JMenuItem("Reset scale only");
 		resetScaleOnlyMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				launcher.setScale(1);
+				getLauncher().setScale(1);
 				refresh();
 			}
 		});
@@ -337,14 +359,14 @@ public class Display extends Canvas {
 		resetPositionOnlyMenuItm = new JMenuItem("Reset position only");
 		resetPositionOnlyMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				switch (launcher.precision) {
+				switch (getLauncher().precision) {
 				case LOW_PRECISION:
-					launcher.setCenter(new Complex(0, 0));
+					getLauncher().setCenter(new Complex(0, 0));
 					break;
 				case HIGH_PRECISION:
 					break;
 				case INFINITE_PRECISION:
-					launcher.setCenterIP(new BigComplex(BigDecimal.ZERO, BigDecimal.ZERO));
+					getLauncher().setCenterIP(new BigComplex(BigDecimal.ZERO, BigDecimal.ZERO));
 					break;
 				}
 				refresh();
@@ -355,7 +377,7 @@ public class Display extends Canvas {
 		resetLimitOnlyMenuItm = new JMenuItem("Reset limit only");
 		resetLimitOnlyMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				launcher.setLimit(150);
+				getLauncher().setLimit(150);
 				refresh();
 			}
 		});
@@ -364,18 +386,18 @@ public class Display extends Canvas {
 		resetAllMenuItm = new JMenuItem("Reset all");
 		resetAllMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				launcher.setScale(1);
-				switch (launcher.precision) {
+				getLauncher().setScale(1);
+				switch (getLauncher().precision) {
 				case LOW_PRECISION:
-					launcher.setCenter(new Complex(0, 0));
+					getLauncher().setCenter(new Complex(0, 0));
 					break;
 				case HIGH_PRECISION:
 					break;
 				case INFINITE_PRECISION:
-					launcher.setCenterIP(new BigComplex(BigDecimal.ZERO, BigDecimal.ZERO));
+					getLauncher().setCenterIP(new BigComplex(BigDecimal.ZERO, BigDecimal.ZERO));
 					break;
 				}
-				launcher.setLimit(150);
+				getLauncher().setLimit(150);
 				refresh();
 			}
 		});
@@ -466,6 +488,9 @@ public class Display extends Canvas {
 		});
 		viewMenu.add(gradientEditorMenuItm);
 
+		mnVideoExport = new JMenu("Video Editor");
+		viewMenu.add(mnVideoExport);
+
 		colorCyclingMenu = new JMenu("Color cycling");
 		colorCyclingMenu.setToolTipText("Cycle the color gradient to create animation");
 		viewMenu.add(colorCyclingMenu);
@@ -532,7 +557,7 @@ public class Display extends Canvas {
 		frame.getContentPane().add(topBar, BorderLayout.NORTH);
 
 		scaleDisplay = new JLabel(); // create JLabel for displaying the current scale value
-		scaleDisplay.setText("Scale = " + launcher.getScale()); // set the text for the scale
+		scaleDisplay.setText("Scale = " + getLauncher().getScale()); // set the text for the scale
 		scaleDisplay.setToolTipText("The current scaling factor of the graph");
 		scaleDisplay.setFont(font);
 		GridBagConstraints gbc_scale = new GridBagConstraints();
@@ -542,9 +567,9 @@ public class Display extends Canvas {
 		gbc_scale.gridy = 0;
 		topBar.add(scaleDisplay, gbc_scale);
 
-		centerXDisplay = new JLabel("X = " + launcher.getCenter().getReal()); // create JLabel for displaying the
-																				// current x
-																				// value
+		centerXDisplay = new JLabel("X = " + getLauncher().getCenter().getReal()); // create JLabel for displaying the
+																					// current x
+																					// value
 		centerXDisplay.setFont(font);
 		GridBagConstraints gbc_centerXDisplay = new GridBagConstraints();
 		gbc_centerXDisplay.anchor = GridBagConstraints.WEST;
@@ -554,7 +579,8 @@ public class Display extends Canvas {
 		centerXDisplay.setToolTipText("Center X value");
 		topBar.add(centerXDisplay, gbc_centerXDisplay);
 
-		centerYDisplay = new JLabel("Y = " + launcher.getCenter().getImag()); // JLabel to display the center y value
+		centerYDisplay = new JLabel("Y = " + getLauncher().getCenter().getImag()); // JLabel to display the center y
+																					// value
 		centerYDisplay.setFont(font);
 		GridBagConstraints gbc_centerYDisplay = new GridBagConstraints();
 		gbc_centerYDisplay.anchor = GridBagConstraints.WEST;
@@ -564,7 +590,7 @@ public class Display extends Canvas {
 		centerYDisplay.setToolTipText("Center Y value");
 		topBar.add(centerYDisplay, gbc_centerYDisplay);
 
-		limitDisplay = new JLabel("Limit = " + launcher.getLimit()); // JLabel to display the current limit value
+		limitDisplay = new JLabel("Limit = " + getLauncher().getLimit()); // JLabel to display the current limit value
 		limitDisplay.setFont(font);
 		limitDisplay.setToolTipText("The current maximum number of iterations allowed");
 		GridBagConstraints gbc_limitDisplay = new GridBagConstraints();
@@ -595,10 +621,11 @@ public class Display extends Canvas {
 		topBar.add(timeEstimateDisplay, gbc_timeEstimateDisplay);
 		timeEstimateDisplay.setToolTipText("Estimated amount of time remaining to finish the current calculation.");
 
-		canvas = new Display(title, getWidth(), getHeight(), launcher); // the canvas that will hold the buffered image
+		canvas = new Display(title, getWidth(), getHeight(), getLauncher()); // the canvas that will hold the buffered
+																				// image
 		canvas.setSize(getWidth(), getHeight()); // set the canvas width and height
 		canvas.setFocusable(false);
-		canvas.addMouseListener(launcher.getMouseManager());
+		canvas.addMouseListener(getLauncher().getMouseManager());
 		canvas.setCursor(cursor);
 		canvas.setBackground(Color.BLACK);
 		frame.getContentPane().add(canvas);
@@ -612,7 +639,7 @@ public class Display extends Canvas {
 
 	public void refresh() {
 		if (!isUpdaterWorking) {
-			Updater updater = new Updater(launcher);
+			Updater updater = new Updater(getLauncher());
 			updater.start();
 		}
 	}
@@ -628,24 +655,24 @@ public class Display extends Canvas {
 	 * Update the display JLabels to reflect a change in the graph settings
 	 */
 	public void updateUI() {
-		switch (launcher.precision) {
+		switch (getLauncher().precision) {
 		case LOW_PRECISION:
-			scaleDisplay.setText("Scale = " + launcher.getScale());
-			limitDisplay.setText("Limit = " + launcher.getLimit());
-			centerXDisplay.setText("X = " + launcher.getCenter().getReal());
-			centerYDisplay.setText("Y = " + launcher.getCenter().getImag());
+			scaleDisplay.setText("Scale = " + getLauncher().getScale());
+			limitDisplay.setText("Limit = " + getLauncher().getLimit());
+			centerXDisplay.setText("X = " + getLauncher().getCenter().getReal());
+			centerYDisplay.setText("Y = " + getLauncher().getCenter().getImag());
 			break;
 		case HIGH_PRECISION:
-			scaleDisplay.setText("Scale = " + launcher.getScaleHP());
-			limitDisplay.setText("Limit = " + launcher.getLimit());
-			centerXDisplay.setText("X = " + launcher.getCenterHP().getReal());
-			centerYDisplay.setText("Y = " + launcher.getCenterHP().getImag());
+			scaleDisplay.setText("Scale = " + getLauncher().getScaleHP());
+			limitDisplay.setText("Limit = " + getLauncher().getLimit());
+			centerXDisplay.setText("X = " + getLauncher().getCenterHP().getReal());
+			centerYDisplay.setText("Y = " + getLauncher().getCenterHP().getImag());
 			break;
 		case INFINITE_PRECISION:
-			scaleDisplay.setText("Scale = " + launcher.getScaleIP());
-			limitDisplay.setText("Limit = " + launcher.getLimit());
-			centerXDisplay.setText("X = " + launcher.getCenterIP().getReal());
-			centerYDisplay.setText("Y = " + launcher.getCenterIP().getImag());
+			scaleDisplay.setText("Scale = " + getLauncher().getScaleIP());
+			limitDisplay.setText("Limit = " + getLauncher().getLimit());
+			centerXDisplay.setText("X = " + getLauncher().getCenterIP().getReal());
+			centerYDisplay.setText("Y = " + getLauncher().getCenterIP().getImag());
 			break;
 		}
 
@@ -671,7 +698,7 @@ public class Display extends Canvas {
 	 * Paint the canvas
 	 */
 	public void paint(Graphics g) {
-		launcher.getDisplay().render(g);
+		getLauncher().getDisplay().render(g);
 
 	}
 
@@ -699,8 +726,9 @@ public class Display extends Canvas {
 		for (int x = 0; x < getWidth(); x++) { // loop through all x and y values
 			for (int y = 0; y < getHeight(); y++) {
 
-				double result = launcher.getResultsArray()[x][y]; // get the result of the complex number at each pixel
-																	// location
+				double result = getLauncher().getResultsArray()[x][y]; // get the result of the complex number at each
+																		// pixel
+																		// location
 				if (result == 0) { // is in set
 					buffImag.setRGB(x, y, Color.BLACK.getRGB());
 				} else if (absoluteColorMode) {
@@ -722,15 +750,15 @@ public class Display extends Canvas {
 					// iterations),
 					// set the pixel color of the buffered image accordingly
 					buffImag.setRGB(x, y,
-							gradient.getColor((float) result / launcher.getLimit() + colorOffset).getRGB()); // set
-																												// the
-																												// pixel
-																												// color
-																												// of
-																												// the
-																												// buffered
-																												// image
-																												// accordingly
+							gradient.getColor((float) result / getLauncher().getLimit() + colorOffset).getRGB()); // set
+																													// the
+																													// pixel
+																													// color
+																													// of
+																													// the
+																													// buffered
+																													// image
+																													// accordingly
 				}
 			}
 		}
@@ -752,13 +780,13 @@ public class Display extends Canvas {
 
 		for (int x = 0; x < getWidth(); x++) { // loop through all x and y values
 			for (int y = 0; y < getHeight(); y++) {
-				launcher.getResultsArray()[x][y] = 0;
+				getLauncher().getResultsArray()[x][y] = 0;
 			}
 		}
 
 		setSize(newX, newY);
 
-		launcher.setResultsArray(new double[newX][newY]);
+		getLauncher().setResultsArray(new double[newX][newY]);
 		buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 
 		canvas.setSize(newX, newY);
@@ -786,7 +814,7 @@ public class Display extends Canvas {
 		// clear graph
 		for (int x = 0; x < getWidth(); x++) { // loop through all x and y values
 			for (int y = 0; y < getHeight(); y++) {
-				launcher.getResultsArray()[x][y] = 0;
+				getLauncher().getResultsArray()[x][y] = 0;
 			}
 		}
 
@@ -795,7 +823,7 @@ public class Display extends Canvas {
 
 		setSize(newX, newY);
 
-		launcher.setResultsArray(new double[newX][newY]);
+		getLauncher().setResultsArray(new double[newX][newY]);
 		buffImag = new BufferedImage(newX, newY, BufferedImage.TYPE_INT_RGB);
 
 		refresh();
@@ -808,7 +836,7 @@ public class Display extends Canvas {
 	/**
 	 * export the image to the specified location
 	 */
-	private void exportImage() {
+	public void exportImage() {
 
 		/*
 		 * Metadata structure is as follows: Root(src) | ---->javax_imageio_png_1.0 | .
@@ -943,23 +971,23 @@ public class Display extends Canvas {
 		// (name) and a value
 		IIOMetadataNode centerXNode = new IIOMetadataNode("tEXtEntry");
 		centerXNode.setAttribute("keyword", "centerX");
-		centerXNode.setAttribute("value", Double.toString(launcher.getCenter().getReal()));
+		centerXNode.setAttribute("value", Double.toString(getLauncher().getCenter().getReal()));
 
 		IIOMetadataNode centerYNode = new IIOMetadataNode("tEXtEntry");
 		centerYNode.setAttribute("keyword", "centerY");
-		centerYNode.setAttribute("value", Double.toString(launcher.getCenter().getImag()));
+		centerYNode.setAttribute("value", Double.toString(getLauncher().getCenter().getImag()));
 
 		IIOMetadataNode scaleNode = new IIOMetadataNode("tEXtEntry");
 		scaleNode.setAttribute("keyword", "scale");
-		scaleNode.setAttribute("value", Double.toString(launcher.getScale()));
+		scaleNode.setAttribute("value", Double.toString(getLauncher().getScale()));
 
 		IIOMetadataNode limitNode = new IIOMetadataNode("tEXtEntry");
 		limitNode.setAttribute("keyword", "limit");
-		limitNode.setAttribute("value", Double.toString(launcher.getLimit()));
+		limitNode.setAttribute("value", Double.toString(getLauncher().getLimit()));
 
 		IIOMetadataNode thresholdNode = new IIOMetadataNode("tEXtEntry");
 		thresholdNode.setAttribute("keyword", "threshold");
-		thresholdNode.setAttribute("value", Double.toString(launcher.getThreshold()));
+		thresholdNode.setAttribute("value", Double.toString(getLauncher().getThreshold()));
 
 		// append the all the data nodes to the textNode
 		textNode.appendChild(centerXNode);
@@ -999,23 +1027,23 @@ public class Display extends Canvas {
 				switch (keyword) { // set the current graph settings based on the node's keyword and value
 				case "centerX":
 					if (tempY != null) {
-						launcher.setCenter(new Complex(value, tempY));
+						getLauncher().setCenter(new Complex(value, tempY));
 					} else {
 						tempX = value;
 					}
 					break;
 				case "centerY":
 					if (tempX != null) {
-						launcher.setCenter(new Complex(tempX, value));
+						getLauncher().setCenter(new Complex(tempX, value));
 					} else {
 						tempY = value;
 					}
 					break;
 				case "scale":
-					launcher.setScale(value);
+					getLauncher().setScale(value);
 					break;
 				case "limit":
-					launcher.setLimit((int) value);
+					getLauncher().setLimit((int) value);
 					break;
 				case "threshold":
 					// TODO: create, setThreshold method in launcher class
@@ -1035,5 +1063,9 @@ public class Display extends Canvas {
 			System.out.println("ERROR: import image could not be found" + e);
 			JOptionPane.showMessageDialog(null, "Error, import image could not be found" + e);
 		}
+	}
+
+	public Launcher getLauncher() {
+		return launcher;
 	}
 }
