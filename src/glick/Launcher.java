@@ -23,6 +23,7 @@ public class Launcher {
 	static Complex topLeft;
 	static Complex bottomRight;
 	static boolean firstBoot = true;
+	static boolean isVideoExporting = false;
 
 	static boolean enableGrid = false;
 
@@ -314,5 +315,13 @@ public class Launcher {
 
 	public Tester getTester() {
 		return tester;
+	}
+
+	public void setIsVideoExporting(boolean value) {
+		isVideoExporting = value;
+	}
+
+	public boolean isVideoExporting() {
+		return isVideoExporting;
 	}
 }

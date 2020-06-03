@@ -168,10 +168,16 @@ public class Display extends Canvas {
 
 		autoControl = new AutomaticController(this);
 		// test zoom
-		autoControl.setLength(3);
+		autoControl.setLength(20);
+		autoControl.getColorOffsetTimeline().add(0, 0);
 		autoControl.getScaleTimeline().add(1, 0);
 		autoControl.getLimitTimeline().add(150, 0);
-		autoControl.getScaleTimeline().add(10, 90);
+		autoControl.getLimitTimeline().add(200, 150);
+		autoControl.getLimitTimeline().add(250, 300);
+		autoControl.getLimitTimeline().add(300, 450);
+		autoControl.getLimitTimeline().add(350, 600);
+		autoControl.getScaleTimeline().add(20, 600);
+		autoControl.getColorOffsetTimeline().add(5, 600);
 
 	}
 
@@ -290,7 +296,7 @@ public class Display extends Canvas {
 		videoExportMenuItm.setEnabled(false);
 		videoExportMenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				autoControl.run();
+				autoControl.start();
 			}
 		});
 		fileMenu.add(videoExportMenuItm);
@@ -646,7 +652,7 @@ public class Display extends Canvas {
 
 	public void setColorOffset(double value) {
 		if (value > 1 || value < 0) {
-			return;
+			colorOffset = (int) colorOffset - colorOffset;
 		}
 		colorOffset = value;
 	}
@@ -909,6 +915,27 @@ public class Display extends Canvas {
 	}
 
 	/**
+	 * Get the current save file
+	 * 
+	 * @return File
+	 */
+	public File getSaveFile() {
+		if (saveFile == null) {
+			setSaveFile();
+		}
+		return saveFile;
+	}
+
+	/**
+	 * return the user save file with no numbering
+	 * 
+	 * @return
+	 */
+	public File getUserSaveFile() {
+		return userSaveFile;
+	}
+
+	/**
 	 * Upgrade the provided meta data to include the current graph settings as text
 	 * entries nodes under the text node.
 	 * 
@@ -1067,5 +1094,11 @@ public class Display extends Canvas {
 
 	public Launcher getLauncher() {
 		return launcher;
+	}
+
+	public BufferedImage getBuffImage() {
+		// FIXME: check if updater is still working without locking up
+
+		return buffImag;
 	}
 }

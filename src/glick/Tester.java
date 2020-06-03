@@ -92,7 +92,7 @@ public class Tester {
 			}
 		}
 		while (!commonPool.isQuiescent()) { // loop until all test have finished executing
-			if (!Launcher.firstBoot) {
+			if (!Launcher.firstBoot && !Launcher.isVideoExporting) {
 				Launcher.display.progressBar.setValue(width * height - commonPool.getQueuedSubmissionCount());
 			} // update progress bar
 			try {
@@ -101,7 +101,7 @@ public class Tester {
 				e.printStackTrace();
 			}
 		}
-		if (!Launcher.firstBoot) {
+		if (!Launcher.firstBoot && !Launcher.isVideoExporting) {
 			Launcher.display.progressBar.setValue(width * height); // set the progress bar to 100%
 			Launcher.display.waitCursor(false); // set to normal cursor
 		}
