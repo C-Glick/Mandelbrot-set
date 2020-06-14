@@ -33,19 +33,24 @@ public class AutomaticController extends Thread {
 		center = new Timeline();
 		limit = new Timeline();
 		colorOffset = new Timeline();
-		FPS = 30;
+		FPS = 60;
 		length = 1;
 	}
 
 	public void run() {
+		display.waitCursor(true);
 		Launcher launcher = display.getLauncher();
 		launcher.setIsVideoExporting(true);
+		display.progressBar.setMinimum(0);
+		// add 30% for video exporting
+		display.progressBar.setMaximum((int) (length * FPS * 1.3));
+		display.progressBar.setValue(0);
 		// display.progressBar.setMinimum(0);
 		// display.progressBar.setMaximum((int) (FPS * length));
 
 		BufferedImage[] images = new BufferedImage[(int) (FPS * length)];
 		for (int frame = 0; frame < length * FPS; frame++) {
-			launcher.setScale(Math.pow(2, scale.getValue(frame)));
+			// launcher.setScale(Math.pow(2, scale.getValue(frame)));
 			// TODO: implement translation launcher.setCenter(center.getValue(frame));
 			launcher.setLimit((int) limit.getValue(frame));
 			display.setColorOffset(colorOffset.getValue(frame));
@@ -54,7 +59,7 @@ public class AutomaticController extends Thread {
 			launcher.calculate(launcher);
 			display.repaint();
 			display.isUpdaterWorking = false;
-			display.progressBar.setValue(frame); // FIXME: progress bar not working
+			display.progressBar.setValue((int) (frame * 0.7));
 			display.updateUI();
 
 			// convert buffered image to 3_BYTE_BGR and copy into images array
@@ -134,6 +139,8 @@ public class AutomaticController extends Thread {
 
 		System.out.println("auto done");
 		launcher.setIsVideoExporting(false);
+		display.progressBar.setValue(display.progressBar.getMaximum());
+		display.waitCursor(false);
 	}
 
 	public void setLength(double length) {

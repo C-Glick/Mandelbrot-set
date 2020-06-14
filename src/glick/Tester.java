@@ -59,7 +59,7 @@ public class Tester {
 	public void test2(Complex topLeft, Complex bottomRight, int width, int height) {
 		limit = Launcher.limit; // update the limit to be the same as it is in Launcher
 
-		if (!Launcher.firstBoot) { // dont call progress bars on the first boot
+		if (!Launcher.firstBoot && !Launcher.isVideoExporting) { // dont call progress bars on the first boot
 			Launcher.display.waitCursor(true); // set cursor to the wait cursor to show processing
 			// set progress bar data
 			Launcher.display.progressBar.setMinimum(0);

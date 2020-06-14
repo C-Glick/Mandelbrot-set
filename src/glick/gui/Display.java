@@ -128,6 +128,7 @@ public class Display extends Canvas {
 	private JMenuItem relativeColoringMenuItm;
 	private JMenu mnVideoExport;
 	private JMenuItem videoExportMenuItm;
+	private JMenuItem customResMenuItm;
 
 	public Display(String title, int width, int height, Launcher launcher) {
 		this.title = title;
@@ -168,16 +169,12 @@ public class Display extends Canvas {
 
 		autoControl = new AutomaticController(this);
 		// test zoom
-		autoControl.setLength(20);
-		autoControl.getColorOffsetTimeline().add(0, 0);
+		autoControl.setLength(6);
+		autoControl.getColorOffsetTimeline().add(0.5, 0);
 		autoControl.getScaleTimeline().add(1, 0);
 		autoControl.getLimitTimeline().add(150, 0);
-		autoControl.getLimitTimeline().add(200, 150);
-		autoControl.getLimitTimeline().add(250, 300);
-		autoControl.getLimitTimeline().add(300, 450);
-		autoControl.getLimitTimeline().add(350, 600);
-		autoControl.getScaleTimeline().add(20, 600);
-		autoControl.getColorOffsetTimeline().add(5, 600);
+
+		autoControl.getColorOffsetTimeline().add(0, 360);
 
 	}
 
@@ -413,7 +410,7 @@ public class Display extends Canvas {
 		viewMenu.add(setResolutionMenu);
 		setResolutionMenu.setToolTipText("Set the resolution of the graph.");
 
-		res1MenuItm = new JMenuItem("256 x 144");
+		res1MenuItm = new JMenuItem("256 x 144 (144p)");
 		res1MenuItm.setToolTipText("114p");
 		setResolutionMenu.add(res1MenuItm);
 		res1MenuItm.addActionListener(new ActionListener() {
@@ -422,7 +419,7 @@ public class Display extends Canvas {
 			}
 		});
 
-		res2MenuItm = new JMenuItem("426 x 240");
+		res2MenuItm = new JMenuItem("426 x 240 (240p)");
 		res2MenuItm.setToolTipText("240p");
 		setResolutionMenu.add(res2MenuItm);
 		res2MenuItm.addActionListener(new ActionListener() {
@@ -431,7 +428,7 @@ public class Display extends Canvas {
 			}
 		});
 
-		res3MenuItm = new JMenuItem("640 x 360");
+		res3MenuItm = new JMenuItem("640 x 360 (360p)");
 		res3MenuItm.setToolTipText("360p");
 		setResolutionMenu.add(res3MenuItm);
 		res3MenuItm.addActionListener(new ActionListener() {
@@ -440,7 +437,7 @@ public class Display extends Canvas {
 			}
 		});
 
-		res4MenuItm = new JMenuItem("854 x 480");
+		res4MenuItm = new JMenuItem("854 x 480 (480p)");
 		res4MenuItm.setToolTipText("480p");
 		setResolutionMenu.add(res4MenuItm);
 		res4MenuItm.addActionListener(new ActionListener() {
@@ -449,7 +446,7 @@ public class Display extends Canvas {
 			}
 		});
 
-		res5MenuItm = new JMenuItem("1280 x 720");
+		res5MenuItm = new JMenuItem("1280 x 720 (720p)");
 		res5MenuItm.setToolTipText("720p");
 		setResolutionMenu.add(res5MenuItm);
 		res5MenuItm.addActionListener(new ActionListener() {
@@ -458,7 +455,7 @@ public class Display extends Canvas {
 			}
 		});
 
-		res6MenuItm = new JMenuItem("1920 x 1080");
+		res6MenuItm = new JMenuItem("1920 x 1080 (1080p)");
 		res6MenuItm.setToolTipText("1080p");
 		setResolutionMenu.add(res6MenuItm);
 		res6MenuItm.addActionListener(new ActionListener() {
@@ -467,7 +464,7 @@ public class Display extends Canvas {
 			}
 		});
 
-		res7MenuItm = new JMenuItem("2560 x 1440");
+		res7MenuItm = new JMenuItem("2560 x 1440 (1440p)");
 		res7MenuItm.setToolTipText("1440p");
 		setResolutionMenu.add(res7MenuItm);
 		res7MenuItm.addActionListener(new ActionListener() {
@@ -476,12 +473,50 @@ public class Display extends Canvas {
 			}
 		});
 
-		res8MenuItm = new JMenuItem("3840 x 2160");
+		res8MenuItm = new JMenuItem("3840 x 2160 (4k)");
 		res8MenuItm.setToolTipText("4k");
 		setResolutionMenu.add(res8MenuItm);
 		res8MenuItm.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resizeGraph(3840, 2160);
+			}
+		});
+
+		customResMenuItm = new JMenuItem("Custom");
+		setResolutionMenu.add(customResMenuItm);
+		setResolutionMenu.add(customResMenuItm);
+		customResMenuItm.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				boolean valid = false;
+				int width = getWidth();
+				int height = getHeight();
+				while (!valid) {
+					String widthString = JOptionPane.showInputDialog("Please enter new width in pixels:", getWidth());
+					try {
+						if (widthString.isEmpty())
+							return;
+						width = Integer.parseInt(widthString);
+					} catch (NumberFormatException err) {
+						JOptionPane.showMessageDialog(frame, "Please enter an integer.", "Integer Parsing Error",
+								JOptionPane.ERROR_MESSAGE);
+						valid = false;
+						continue;
+					}
+					String heightString = JOptionPane.showInputDialog("Please enter new height in pixels:",
+							getHeight());
+					try {
+						if (heightString.isEmpty())
+							return;
+						height = Integer.parseInt(heightString);
+					} catch (NumberFormatException err) {
+						JOptionPane.showMessageDialog(frame, "Please enter an integer.", "Integer Parsing Error",
+								JOptionPane.ERROR_MESSAGE);
+						valid = false;
+						continue;
+					}
+					valid = true;
+				}
+				resizeGraph(width, height);
 			}
 		});
 
